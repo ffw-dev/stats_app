@@ -11,8 +11,6 @@ import 'screens/login_screen.dart';
 
 
 void main() async {
-  await SessionService().createAndSaveSession();
-  SecureCookieService().deleteFromStorage();
   runApp(const MyApp());
 }
 
@@ -29,7 +27,6 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     tryLoginByCookieFuture = SessionService().createAndSaveSession().then((value) => AuthenticationProvider().loginByCookie());
-    print('initState');
     super.initState();
   }
 
