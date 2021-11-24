@@ -1,0 +1,25 @@
+import 'package:flutter/material.dart';
+
+class AppMainBar extends StatefulWidget implements PreferredSizeWidget {
+  String title;
+
+  AppMainBar(this.title, {Key? key}) : super(key: key);
+
+  @override
+  State<AppMainBar> createState() => _AppMainBarState();
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+class _AppMainBarState extends State<AppMainBar> {
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: Text(widget.title),
+      actions: const [
+        IconButton(onPressed: null, icon: Icon(Icons.account_circle_outlined, color: Colors.white,))
+      ],
+    );
+  }
+}
