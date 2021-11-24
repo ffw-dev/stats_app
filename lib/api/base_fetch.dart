@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:stats_app/managers/session_service.dart';
 
-import 'package:ffw_stat_app_second/managers/session_service.dart';
 
 
 import '../authenticated_exception.dart';

@@ -1,13 +1,13 @@
 
-import 'package:ffw_stat_app_second/providers/authentication_provider.dart';
-import 'package:ffw_stat_app_second/screens/home.dart';
-import 'package:ffw_stat_app_second/screens/login_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:stats_app/providers/authentication_provider.dart';
+import 'package:stats_app/screens/home.dart';
 
 import 'managers/authentication/secure_cookie_service.dart';
 import 'managers/session_service.dart';
+import 'screens/login_screen.dart';
 
 
 void main() async {

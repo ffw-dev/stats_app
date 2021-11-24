@@ -1,8 +1,8 @@
 
 
 import 'package:dio/dio.dart';
-import 'package:ffw_stat_app_second/models/secure_cookie.dart';
-import 'package:ffw_stat_app_second/models/user.dart';
+import 'package:stats_app/models/secure_cookie.dart';
+import 'package:stats_app/models/user.dart';
 
 import '../base_fetch.dart';
 import '../base_response.dart';

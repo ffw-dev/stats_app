@@ -1,5 +1,4 @@
-
-import 'package:ffw_stat_app_second/models/session.dart';
+import 'package:stats_app/models/session.dart';
 
 import '../base_fetch.dart';
 import '../base_response.dart';

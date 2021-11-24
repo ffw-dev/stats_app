@@ -1,6 +1,8 @@
+
 import 'package:dio/dio.dart';
-import 'package:ffw_stat_app_second/api/api_endpoints/authentication_endpoints.dart';
-import 'package:ffw_stat_app_second/managers/authentication/secure_cookie_service.dart';
+import 'package:stats_app/api/api_endpoints/authentication_endpoints.dart';
+import 'package:stats_app/managers/authentication/secure_cookie_service.dart';
+
 
 
 class LoginService {

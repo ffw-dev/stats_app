@@ -1,6 +1,6 @@
 
-import 'package:ffw_stat_app_second/api/api_endpoints/session_endpoints.dart';
-import 'package:ffw_stat_app_second/models/session.dart';
+import 'package:stats_app/api/api_endpoints/session_endpoints.dart';
+import 'package:stats_app/models/session.dart';
 
 import 'storable.dart';
 

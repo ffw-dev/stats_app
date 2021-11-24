@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:ffw_stat_app_second/api/api_endpoints/authentication_endpoints.dart';
-import 'package:ffw_stat_app_second/models/secure_cookie.dart';
+import 'package:stats_app/api/api_endpoints/authentication_endpoints.dart';
+import 'package:stats_app/models/secure_cookie.dart';
 
 import '../storable.dart';
 

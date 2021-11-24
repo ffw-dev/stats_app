@@ -1,9 +1,9 @@
 
-import 'package:ffw_stat_app_second/providers/authentication_provider.dart';
-import 'package:ffw_stat_app_second/widgets/app_main_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:stats_app/providers/authentication_provider.dart';
+import 'package:stats_app/widgets/app_main_bar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);

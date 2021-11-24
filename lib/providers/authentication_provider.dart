@@ -1,7 +1,7 @@
 
-import 'package:ffw_stat_app_second/managers/authentication/login_service.dart';
-import 'package:ffw_stat_app_second/managers/authentication/secure_cookie_service.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:stats_app/managers/authentication/login_service.dart';
+import 'package:stats_app/managers/authentication/secure_cookie_service.dart';
 
 
 class AuthenticationProvider with ChangeNotifier {

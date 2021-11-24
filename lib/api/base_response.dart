@@ -1,8 +1,8 @@
 
-import 'package:ffw_stat_app_second/api/response_parts/body_response_part.dart';
-import 'package:ffw_stat_app_second/api/response_parts/error_response_part.dart';
-import 'package:ffw_stat_app_second/api/response_parts/header_response_part.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:stats_app/api/response_parts/body_response_part.dart';
+import 'package:stats_app/api/response_parts/error_response_part.dart';
+import 'package:stats_app/api/response_parts/header_response_part.dart';
 
 //part 'response.g.dart';
 
