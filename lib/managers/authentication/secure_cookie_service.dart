@@ -1,6 +1,6 @@
+import 'package:dev_basic_api/main.dart';
 import 'package:dio/dio.dart';
-import 'package:stats_app/api/api_endpoints/authentication_endpoints.dart';
-import 'package:stats_app/models/secure_cookie.dart';
+
 
 import '../storable.dart';
 
@@ -9,7 +9,7 @@ class SecureCookieService extends Storable<SecureCookie>  {
   String get key => "secureCookie";
 
   Future<void> createCookie() async {
-    var response = await AuthenticationEndpoints.secureCookieCreate();
+    var response = await DevBasicApi.authenticationEndpoints.secureCookieCreate();
 
     replaceOldCookie(response.body.results[0]);
   }
@@ -21,7 +21,7 @@ class SecureCookieService extends Storable<SecureCookie>  {
 
   Future<bool> loginByCookie() async {
     var cookie = await readFromStorage();
-
+    
     if(cookie == null) {
       return false;
     }
@@ -31,8 +31,11 @@ class SecureCookieService extends Storable<SecureCookie>  {
       'passwordGuid': cookie.passwordGuid
     });
 
-    var response = await AuthenticationEndpoints.secureCookieLogin(formData);
+    var response = await DevBasicApi.authenticationEndpoints.secureCookieLogin(formData);
 
+    if(response == null) {
+      return false;
+    }
     replaceOldCookie(response.body.results[0]);
 
     return response.error.fullName == null ? true : false;

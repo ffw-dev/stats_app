@@ -1,6 +1,5 @@
 
-import 'package:stats_app/api/api_endpoints/session_endpoints.dart';
-import 'package:stats_app/models/session.dart';
+import 'package:dev_basic_api/main.dart';
 
 import 'storable.dart';
 
@@ -9,7 +8,7 @@ class SessionService extends Storable<Session> {
   String get key => "session";
 
   Future<Session> createAndSaveSession() async {
-    var response = await SessionEndpoints.createSessionGet();
+    var response = await DevBasicApi.sessionEndpoints.createSessionGet();
     var session = response.body.results[0];
 
     await writeToStorage(session);
