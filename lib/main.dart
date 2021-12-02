@@ -2,7 +2,6 @@ import 'package:dev_basic_api/main.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:stats_app/managers/authentication/secure_cookie_service.dart';
 import 'package:stats_app/managers/session_service.dart';
 
 import 'package:stats_app/providers/authentication_provider.dart';

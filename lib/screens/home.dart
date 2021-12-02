@@ -9,17 +9,24 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+enum Period {
+  month,
+  week,
+  all,
+}
+
 class _HomeScreenState extends State<HomeScreen> {
-  late List<BillingTimedSummaryItem> billingTimedSummaryItem;
+  late List<BillingTimedSummaryItem> billingTimedSummaryItems;
   bool loaded = false;
   bool noDataPresent = false;
+  Period selectedPeriod = Period.all;
 
   @override
   void initState() {
     super.initState();
     DevBasicApi.billingTimedEventEndpoints.getSummary(20000).then((value) {
       setState(() {
-        billingTimedSummaryItem = value.body.results;
+        billingTimedSummaryItems = value.body.results;
         loaded = true;
       });
     });
@@ -30,93 +37,83 @@ class _HomeScreenState extends State<HomeScreen> {
     return MaterialApp(
       home: Scaffold(
           appBar: AppBar(
-            title: const Text('ffw statistics'),
+            title: const Text('Fastforward statistics'),
+            backgroundColor: Theme.of(context).primaryColor,
           ),
           body: !loaded
               ? const Text('loading')
               : Center(
-                  child: SingleChildScrollView(
-                  child: Column(children: <Widget>[
-                    buildRadioRow(),
-                    Container(
-                      margin: const EdgeInsets.all(20),
-                      child: noDataPresent
-                          ? const Text('no data found')
-                          : Table(
-                              border: TableBorder.symmetric(
-                                  inside: const BorderSide(color: Colors.grey)),
-                              children: [
-                                buildTableHeaderRow(),
-                                ...buildListOfRows()
-                              ],
-                            ),
+                  child: Stack(
+                  children: [
+                    SingleChildScrollView(
+                      child: Column(children: <Widget>[
+                        Container(
+                            margin: const EdgeInsets.all(2),
+                            child:
+                                noDataPresent ? const Text('no data found') : buildTablesColumn()),
+                      ]),
                     ),
-                  ]),
+                    Positioned(
+                        child: Container(
+                            height: 36,
+                            decoration: const BoxDecoration(color: Colors.red),
+                            child: buildRadioRow()))
+                  ],
                 ))),
     );
   }
 
-  List<TableRow> buildListOfRows() {
-    var listOfRows = billingTimedSummaryItem
-        .map((e) => TableRow(children: [
-              buildTableCell(
-                  "${DateTime.fromMillisecondsSinceEpoch(e.date).year.toString()}/"
-                  "${DateTime.fromMillisecondsSinceEpoch(e.date).month.toString()}/"
-                  "${DateTime.fromMillisecondsSinceEpoch(e.date).day.toString()}"),
-              buildTableCell(e.finalizeDuration),
-              buildTableCell(e.finalizeCount.toString()),
-              buildTableCell(e.digitizeDuration.toString()),
-              buildTableCell(e.digitizationCount.toString()),
-            ]))
-        .toList();
+  Column buildTablesColumn() {
+    List<List<BillingTimedSummaryItem>> filteredItemsBySelectedPeriod = [];
 
-    int weekRowsInserted = 0;
-    for (var i = 0; i < billingTimedSummaryItem.length;) {
-      int currentMonth =
-          DateTime.fromMillisecondsSinceEpoch(billingTimedSummaryItem[i].date)
-              .month;
-      int monthFinalizedTotal = 0;
-      int monthExportedTotal = 0;
+    for (int i = 0; i < billingTimedSummaryItems.length;) {
+      var item = billingTimedSummaryItems[i];
+      var itemsDate = DateTime.fromMillisecondsSinceEpoch(item.date);
+      List<BillingTimedSummaryItem> filtered = [];
 
-      while (i <= billingTimedSummaryItem.length - 1 &&
-          DateTime.fromMillisecondsSinceEpoch(billingTimedSummaryItem[i].date)
-                  .month ==
-              currentMonth) {
-        monthFinalizedTotal += billingTimedSummaryItem[i].finalizeCount;
-        monthExportedTotal += billingTimedSummaryItem[i++].exportCount;
+      if (selectedPeriod == Period.month) {
+        while (i < billingTimedSummaryItems.length - 1 &&
+            itemsDate.month ==
+                DateTime.fromMillisecondsSinceEpoch(billingTimedSummaryItems[i].date).month) {
+          filtered.add(billingTimedSummaryItems[i++]);
+        }
+        i++;
+      } else if (selectedPeriod == Period.week) {
+        while (i < billingTimedSummaryItems.length - 1 &&
+            itemsDate.weekday % 7 ==
+                DateTime.fromMillisecondsSinceEpoch(billingTimedSummaryItems[i].date).weekday % 7) {
+          filtered.add(billingTimedSummaryItems[++i]);
+        }
+        i++;
+      } else {
+        filteredItemsBySelectedPeriod.add(billingTimedSummaryItems);
+        break;
       }
 
-      listOfRows.insert(
-          weekRowsInserted++ + i,
-          buildMonthTotal(monthFinalizedTotal, monthExportedTotal,
-              DateTime.fromMillisecondsSinceEpoch(0)));
-
-      monthFinalizedTotal = 0;
-      monthExportedTotal = 0;
+      filteredItemsBySelectedPeriod.add(filtered);
     }
 
-    return listOfRows;
+    return Column(
+      children: [
+        ...filteredItemsBySelectedPeriod.map((e) => buildTable(e, valueFromPeriod(selectedPeriod)))
+      ],
+    );
   }
 
-  TableRow buildMonthTotal(int monthFinalizedTotal, int monthExportedTotal,
-      DateTime finalizedTotal) {
-    return TableRow(
-        decoration: BoxDecoration(
-            color: Colors.blueGrey,
-            border: Border.all(color: Colors.blueGrey, width: 3)),
-        children: [
-          buildTableCell('Month total', color: Colors.white),
-          buildTableCell(''),
-          buildTableCell(monthFinalizedTotal.toString(), color: Colors.white),
-          buildTableCell(''),
-          buildTableCell(monthExportedTotal.toString(), color: Colors.white),
-        ]);
+  Table buildTable(
+      List<BillingTimedSummaryItem> filteredBillingTimedSummaryItems, String fromPeriod) {
+    return Table(
+      border: const TableBorder(horizontalInside: BorderSide(color: Colors.black26)),
+      children: <TableRow>[
+        ...buildTableRowsFromFilteredBillingTimedSummaryItems(filteredBillingTimedSummaryItems),
+        buildTotalFooter(filteredBillingTimedSummaryItems, fromPeriod)
+      ],
+    );
   }
 
-  TableRow buildTableHeaderRow() {
+  TableRow buildTableHeader() {
     return TableRow(
-        decoration:
-            BoxDecoration(border: Border.all(color: Colors.blueGrey, width: 3)),
+        decoration: BoxDecoration(border: Border.all(color: Colors.blueGrey, width: 3)),
         children: [
           buildTableCell('Date'),
           buildTableCell('Finalized time'),
@@ -126,30 +123,79 @@ class _HomeScreenState extends State<HomeScreen> {
         ]);
   }
 
+  TableRow buildTotalFooter(
+      List<BillingTimedSummaryItem> filteredBillingTimedSummaryItems, String fromPeriod) {
+    var finalizedTotal = 0;
+    for (var item in filteredBillingTimedSummaryItems) {
+      finalizedTotal += item.finalizeCount;
+    }
+
+    var exportedTotal = 0;
+    for (var item in filteredBillingTimedSummaryItems) {
+      exportedTotal += item.digitizationCount;
+    }
+
+    return TableRow(
+        decoration: BoxDecoration(
+            color: Colors.blueGrey, border: Border.all(color: Colors.blueGrey, width: 3)),
+        children: [
+          buildTableCell('$fromPeriod total', color: Colors.white),
+          buildTableCell(''),
+          buildTableCell(finalizedTotal.toString(), color: Colors.white),
+          buildTableCell(''),
+          buildTableCell(exportedTotal.toString(), color: Colors.white),
+        ]);
+  }
+
+  List<TableRow> buildTableRowsFromFilteredBillingTimedSummaryItems(
+      List<BillingTimedSummaryItem> items) {
+    return items
+        .map((e) => TableRow(children: [
+              buildTableCell("${DateTime.fromMillisecondsSinceEpoch(e.date).year.toString()}/"
+                  "${DateTime.fromMillisecondsSinceEpoch(e.date).month.toString()}/"
+                  "${DateTime.fromMillisecondsSinceEpoch(e.date).day.toString()}"),
+              buildTableCell(e.finalizeDuration.toString().substring(0, 10)),
+              buildTableCell(e.finalizeCount.toString()),
+              buildTableCell(e.digitizeDuration.toString().substring(0, 10)),
+              buildTableCell(e.digitizationCount.toString()),
+            ]))
+        .toList();
+  }
+
   Column buildTableCell(String value, {Color color = Colors.black}) {
     return Column(children: [
       Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Text(value, style: TextStyle(fontSize: 15.0, color: color)),
+        child: Text(value, style: TextStyle(fontSize: 13.0, color: color)),
       )
     ]);
   }
 
   Row buildRadioRow() {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        buildRadioItem("week", getSummaryWithPeriod(7)),
-        buildRadioItem("month", getSummaryWithPeriod(30)),
-        buildRadioItem("all the time", getSummaryWithPeriod(20000)),
+        buildRadioItem("week", (_) => selectPeriod(Period.week)),
+        buildRadioItem("month", (_) => selectPeriod(Period.month)),
+        buildRadioItem("entire period", (_) => selectPeriod(Period.all)),
       ],
     );
+  }
+
+  void selectPeriod(Period period) {
+    setState(() {
+      selectedPeriod = period;
+    });
   }
 
   Row buildRadioItem(String value, void Function(dynamic) onChangedHandler) {
     return Row(
       children: [
         Radio(value: value, groupValue: null, onChanged: onChangedHandler),
-        Text(value)
+        Text(
+          value,
+          style: const TextStyle(color: Colors.white),
+        )
       ],
     );
   }
@@ -160,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
       DevBasicApi.billingTimedEventEndpoints.getSummary(daysOld).then((value) {
         setState(() {
           if (value.body.totalCount != 0) {
-            billingTimedSummaryItem = value.body.results;
+            billingTimedSummaryItems = value.body.results;
             loaded = true;
             noDataPresent = false;
           } else {
@@ -170,5 +216,44 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       });
     };
+  }
+
+  List<BillingTimedSummaryItem> getFilteredItemsFromPeriod(int? month, int? week, int year) {
+    if (month == null && week == null) {
+      throw Exception('in getFilteredItemsFromPeriod() you must specify at least month or week');
+    }
+
+    return billingTimedSummaryItems.where((element) {
+      var eYear = DateTime.fromMillisecondsSinceEpoch(element.date).year;
+
+      if (month != null &&
+          month != DateTime.fromMillisecondsSinceEpoch(element.date).month &&
+          eYear != year) {
+        return false;
+      } else if (week != null &&
+          DateTime.fromMillisecondsSinceEpoch(element.date).weekday % 7 != week &&
+          eYear != year) {
+        return false;
+      }
+
+      return true;
+    }).toList();
+  }
+
+  String valueFromPeriod(Period period) {
+    switch (period) {
+      case Period.month:
+        {
+          return "Month";
+        }
+      case Period.week:
+        {
+          return "Week";
+        }
+      case Period.all:
+        {
+          return "Overall";
+        }
+    }
   }
 }
