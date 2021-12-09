@@ -16,6 +16,7 @@ class _AppMainBarState extends State<AppMainBar> {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      backgroundColor: Colors.red,
       title: Text(widget.title),
       actions: const [
         IconButton(onPressed: null, icon: Icon(Icons.account_circle_outlined, color: Colors.white,))

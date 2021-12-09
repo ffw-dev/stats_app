@@ -3,14 +3,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:stats_app/managers/session_service.dart';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:stats_app/providers/authentication_provider.dart';
 import 'package:stats_app/screens/home.dart';
+import 'package:stats_app/screens/select_collaborators_screen.dart';
 
 import 'screens/login_screen.dart';
 
 void main() async {
   configureInjectionDependencies();
+  await dotenv.load(fileName: ".env", mergeWith: {
+    'TEST_VAR': '5',
+  });
   runApp(const MyApp());
 }
 
@@ -41,11 +45,20 @@ class _MyAppState extends State<MyApp> {
           builder: (ctx, authenticationProvider, _) => MaterialApp(
             theme: ThemeData(
               primarySwatch: Colors.red,
+              backgroundColor: Colors.red
             ),
-            home: authenticationProvider.isAuthenticated ==
-                    AuthenticatedState.authenticated
-                ? const HomeScreen()
-                : waitForLoginFutureAndBuildAppropriateWidget(),
+            onGenerateRoute: (RouteSettings settings) {
+              print('build route for ${settings.name}');
+              var routes = <String, WidgetBuilder>{
+                "clientSummary": (ctx) => HomeScreen(settings.arguments),
+              };
+              WidgetBuilder builder = routes['clientSummary']!;
+              return MaterialPageRoute(builder: (ctx) => builder(ctx));
+            },
+            routes: {
+              '/': (_) => waitForLoginFutureAndBuildAppropriateWidget(),
+              '/selectCollaborators': (_) => const SelectCollaborator(),
+            },
           ),
         ));
   }
@@ -57,6 +70,6 @@ class _MyAppState extends State<MyApp> {
             ? const CircularProgressIndicator()
             : result.data == false
                 ? const LoginScreen()
-                : const HomeScreen());
+                : const SelectCollaborator());
   }
 }
