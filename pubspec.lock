@@ -174,7 +174,7 @@ packages:
     description:
       path: "."
       ref: dev_basic_clients_apis_merged
-      resolved-ref: "7b5b79e1bc054a7f6108a8f689ccaa5ec734a49d"
+      resolved-ref: "8783e938881a26011fe5fe884a87afe9d93335a6"
       url: "https://github.com/ffw-dev/dev-basic-api.git"
     source: git
     version: "1.0.0"

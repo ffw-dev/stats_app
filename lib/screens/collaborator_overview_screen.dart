@@ -2,14 +2,18 @@ import 'package:dev_basic_api/main.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:stats_app/widgets/app_main_bar.dart';
+import 'package:stats_app/widgets/summaryOverview/custom_table.dart';
+import 'package:stats_app/widgets/summaryOverview/radio_item.dart';
 
-class HomeScreen extends StatefulWidget {
-  dynamic arguments;
+class CollaboratorOverviewScreen extends StatefulWidget {
+  final dynamic arguments;
 
-  HomeScreen(this.arguments, {Key? key}) : super(key: key);
+  const CollaboratorOverviewScreen(this.arguments, {Key? key})
+      : super(key: key);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<CollaboratorOverviewScreen> createState() =>
+      _CollaboratorOverviewScreenState();
 }
 
 enum Period {
@@ -18,18 +22,21 @@ enum Period {
   all,
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _CollaboratorOverviewScreenState
+    extends State<CollaboratorOverviewScreen> {
   late List<BillingTimedSummaryItem> billingTimedSummaryItems;
   bool loaded = false;
   bool noDataPresent = false;
-  Period selectedPeriod = Period.all;
+  Period selectedPeriod = Period.month;
 
   @override
   void initState() {
-    print('adasd');
-    print(widget.arguments);
     super.initState();
-    DevBasicApi.productionClientApisBillingSummaryEndpoint.authenticateAndGetSummary(widget.arguments['baseUrl']!, widget.arguments['authToken']!).then((value) {
+    DevBasicApi.productionClientApisBillingSummaryEndpoint
+        .authenticateAndGetSummary(
+            baseURL: widget.arguments['baseUrl']!,
+            authToken: widget.arguments['authToken']!)
+        .then((value) {
       setState(() {
         billingTimedSummaryItems = value.body.results;
         loaded = true;
@@ -41,22 +48,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-          appBar: AppMainBar('SVT-0 Overview'),
+          appBar: AppMainBar(widget.arguments['collaborator']!),
           body: !loaded
               ? const Text('loading')
-              : Center(
-                  child: Stack(
+              : Stack(
                   children: [
-                    SingleChildScrollView(
-                      child: Column(children: <Widget>[
-                        Container(
-                            margin: const EdgeInsets.all(2),
-                            child: noDataPresent
-                                ? const Text('no data found')
-                                : buildTablesColumn()),
-                      ]),
-                    ),
                     Positioned(
+                      top: 0,
+                        width: MediaQuery.of(context).size.width,
                         child: Container(
                             height: 36,
                             decoration: const BoxDecoration(color: Colors.red),
@@ -67,7 +66,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: MediaQuery.of(context).size.width,
                         child: Container(
                           decoration: const BoxDecoration(color: Colors.red),
-                          child: buildPositionedHeader(),
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.of(context)
+                                  .pushNamed('/selectCollaborators');
+                            },
+                            child: const Text(
+                              'Select collaborator',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
                         )),
                     Positioned(
                         top: 72,
@@ -75,18 +83,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: MediaQuery.of(context).size.width,
                         child: Container(
                           decoration: const BoxDecoration(color: Colors.red),
-                          child: TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pushNamed('/selectCollaborators');
-                            },
-                            child: const Text(
-                              'Select collaborator',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ))
+                          child: buildPositionedHeader(),
+                        )),
+                    Positioned(
+                      top: 108,
+                      left: 0.0,
+                      bottom:0.0,
+                      width: MediaQuery.of(context).size.width,
+                      child: noDataPresent
+                          ? const Text('no data found')
+                          : buildTablesListView(),
+                    ),
                   ],
-                ))),
+                )),
     );
   }
 
@@ -118,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Column buildTablesColumn() {
+  ListView buildTablesListView() {
     List<List<BillingTimedSummaryItem>> filteredItemsBySelectedPeriod = [];
 
     for (int i = 0; i < billingTimedSummaryItems.length;) {
@@ -153,124 +162,44 @@ class _HomeScreenState extends State<HomeScreen> {
       filteredItemsBySelectedPeriod.add(filtered);
     }
 
-    return Column(
+    return ListView(
       children: [
-        ...filteredItemsBySelectedPeriod
-            .map((e) => buildTable(e, valueFromPeriod(selectedPeriod)))
+        ...filteredItemsBySelectedPeriod.map((e) => CustomTable(
+              filteredBillingTimedSummaryItems: e,
+              fromPeriod: valueFromPeriod(selectedPeriod),
+            ))
       ],
     );
-  }
-
-  Table buildTable(
-      List<BillingTimedSummaryItem> filteredBillingTimedSummaryItems,
-      String fromPeriod) {
-    return Table(
-      border: const TableBorder(
-          horizontalInside: BorderSide(color: Colors.black26)),
-      children: <TableRow>[
-        ...buildTableRowsFromFilteredBillingTimedSummaryItems(
-            filteredBillingTimedSummaryItems),
-        buildTotalFooter(filteredBillingTimedSummaryItems, fromPeriod)
-      ],
-    );
-  }
-
-  TableRow buildTableHeader() {
-    return TableRow(
-        decoration:
-            BoxDecoration(border: Border.all(color: Colors.blueGrey, width: 3)),
-        children: [
-          buildTableCell('Date'),
-          buildTableCell('Finalized time'),
-          buildTableCell('Finalized parts'),
-          buildTableCell('Exported time'),
-          buildTableCell('Exported parts'),
-        ]);
-  }
-
-  TableRow buildTotalFooter(
-      List<BillingTimedSummaryItem> filteredBillingTimedSummaryItems,
-      String fromPeriod) {
-    var finalizedTotal = 0;
-    for (var item in filteredBillingTimedSummaryItems) {
-      finalizedTotal += item.finalizeCount;
-    }
-
-    var exportedTotal = 0;
-    for (var item in filteredBillingTimedSummaryItems) {
-      exportedTotal += item.digitizationCount;
-    }
-
-    return TableRow(
-        decoration: BoxDecoration(
-            color: Colors.blueGrey,
-            border: Border.all(color: Colors.blueGrey, width: 3)),
-        children: [
-          buildTableCell('$fromPeriod total', color: Colors.white),
-          buildTableCell(''),
-          buildTableCell(finalizedTotal.toString(), color: Colors.white),
-          buildTableCell(''),
-          buildTableCell(exportedTotal.toString(), color: Colors.white),
-        ]);
-  }
-
-  List<TableRow> buildTableRowsFromFilteredBillingTimedSummaryItems(
-      List<BillingTimedSummaryItem> items) {
-    return items
-        .map((e) => TableRow(children: [
-              buildTableCell(
-                  "${DateTime.fromMillisecondsSinceEpoch(e.date).year.toString().substring(2)}/"
-                  "${DateTime.fromMillisecondsSinceEpoch(e.date).month.toString()}/"
-                  "${DateTime.fromMillisecondsSinceEpoch(e.date).day.toString()}"),
-              buildTableCell(e.finalizeDuration.toString().substring(0, 10)),
-              buildTableCell(e.finalizeCount.toString()),
-              buildTableCell(e.digitizeDuration.toString().substring(0, 10)),
-              buildTableCell(e.digitizationCount.toString()),
-            ]))
-        .toList();
-  }
-
-  Column buildTableCell(String value, {Color color = Colors.black}) {
-    return Column(children: [
-      Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Text(value, style: TextStyle(fontSize: 11.0, color: color)),
-      )
-    ]);
   }
 
   Row buildRadioRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        buildRadioItem("week", (_) => selectPeriod(Period.week)),
-        buildRadioItem("month", (_) => selectPeriod(Period.month)),
-        buildRadioItem("entire period", (_) => selectPeriod(Period.all)),
-      ],
-    );
-  }
-
-  void selectPeriod(Period period) {
-    setState(() {
-      selectedPeriod = period;
-    });
-  }
-
-  Row buildRadioItem(String value, void Function(dynamic) onChangedHandler) {
-    return Row(
-      children: [
-        Theme(
-            data: ThemeData(unselectedWidgetColor: Colors.white),
-            child: Radio(
-              value: value,
-              groupValue: null,
-              onChanged: onChangedHandler,
-              activeColor: Colors.white,
-            )),
-        Text(
-          value,
-          style: const TextStyle(color: Colors.white, fontSize: 12),
-        )
+        RadioItem(
+          value: 'Week',
+          onChangedHandler: (_) {
+            setState(() {
+              selectedPeriod = Period.week;
+            });
+          },
+        ),
+        RadioItem(
+          value: 'Month',
+          onChangedHandler: (_) {
+            setState(() {
+              selectedPeriod = Period.month;
+            });
+          },
+        ),
+        RadioItem(
+          value: 'Entire period',
+          onChangedHandler: (_) {
+            setState(() {
+              selectedPeriod = Period.all;
+            });
+          },
+        ),
       ],
     );
   }

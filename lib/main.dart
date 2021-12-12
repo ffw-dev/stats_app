@@ -5,7 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:stats_app/managers/session_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:stats_app/providers/authentication_provider.dart';
-import 'package:stats_app/screens/home.dart';
+import 'package:stats_app/screens/collaborator_overview_screen.dart';
+import 'package:stats_app/screens/overview_screen.dart';
 import 'package:stats_app/screens/select_collaborators_screen.dart';
 
 import 'screens/login_screen.dart';
@@ -50,7 +51,7 @@ class _MyAppState extends State<MyApp> {
             onGenerateRoute: (RouteSettings settings) {
               print('build route for ${settings.name}');
               var routes = <String, WidgetBuilder>{
-                "clientSummary": (ctx) => HomeScreen(settings.arguments),
+                "clientSummary": (ctx) => CollaboratorOverviewScreen(settings.arguments),
               };
               WidgetBuilder builder = routes['clientSummary']!;
               return MaterialPageRoute(builder: (ctx) => builder(ctx));
@@ -70,6 +71,6 @@ class _MyAppState extends State<MyApp> {
             ? const CircularProgressIndicator()
             : result.data == false
                 ? const LoginScreen()
-                : const SelectCollaborator());
+                : const OverviewScreen());
   }
 }
