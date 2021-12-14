@@ -32,6 +32,10 @@ class _CollaboratorOverviewScreenState
   @override
   void initState() {
     super.initState();
+    loadBillingSummary();
+  }
+
+  void loadBillingSummary() {
     DevBasicApi.productionClientApisBillingSummaryEndpoint
         .authenticateAndGetSummary(
             baseURL: widget.arguments['baseUrl']!,
@@ -92,7 +96,8 @@ class _CollaboratorOverviewScreenState
                       width: MediaQuery.of(context).size.width,
                       child: noDataPresent
                           ? const Text('no data found')
-                          : buildTablesListView(),
+                          : RefreshIndicator(onRefresh: () async => loadBillingSummary(),
+                          child: buildTablesListView()),
                     ),
                   ],
                 )),
