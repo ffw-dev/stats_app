@@ -18,67 +18,46 @@ class _SelectCollaboratorState extends State<SelectCollaborator> {
     super.initState();
   }
 
+  List<Column> buildClientsContainers() {
+    List<Column> columnList = [];
+    List<String> mapTolist = [];
+
+    dotenv.env.forEach((key, value) {
+      mapTolist.add(value);
+    });
+
+    for(var i = 1; i <= mapTolist.length; i++) {
+      if(i % 2 != 0) {
+        var url = mapTolist[i];
+        var token = mapTolist[i-1];
+        var collaborator = url.substring(8);
+        collaborator = collaborator.split('-basic')[0].toUpperCase();
+
+        columnList.add(
+            Column(children: [
+              TextButton(onPressed: () {
+                Navigator.of(context).pushNamed('clientSummary', arguments: {
+                  'authToken': token,
+                  'baseUrl': url,
+                  'collaborator': collaborator
+                });
+              }, child: Text(collaborator),),
+              const Divider(),
+            ],)
+        );
+      }
+    }
+
+    return columnList;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppMainBar('Fastforward Collaborators'),
-      body: Column(
+      body: ListView(
         children: <Widget>[
-          TextButton(onPressed: () { 
-            Navigator.of(context).pushNamed('clientSummary', arguments: {
-              'authToken': dotenv.env['SVT0TOKEN'],
-              'baseUrl': dotenv.env['SVT0BASEURL'],
-              'collaborator': 'SVT-0'
-            });
-          }, child: const Text('SVT0'),),
-          Divider(),
-          TextButton(onPressed: () {
-            Navigator.of(context).pushNamed('clientSummary', arguments: {
-              'authToken': dotenv.env['SVT1TOKEN'],
-              'baseUrl': dotenv.env['SVT1BASEURL'],
-              'collaborator': 'SVT-1'
-            });
-          }, child: const Text('SVT1'),),
-          Divider(),
-          TextButton(onPressed: () {
-            Navigator.of(context).pushNamed('clientSummary', arguments: {
-              'authToken': dotenv.env['SVT2TOKEN'],
-              'baseUrl': dotenv.env['SVT2BASEURL'],
-              'collaborator': 'SVT-2'
-            });
-          }, child: const Text('SVT2'),),
-          Divider(),
-          TextButton(onPressed: () {
-            Navigator.of(context).pushNamed('clientSummary', arguments: {
-              'authToken': dotenv.env['BBCBRISTOLTOKEN'],
-              'baseUrl': dotenv.env['BBCBRISTOLBASEURL'],
-              'collaborator': 'BBC-Bristol'
-            });
-          }, child: const Text('BBC-Bristol'),),
-          Divider(),
-          TextButton(onPressed: () {
-            Navigator.of(context).pushNamed('clientSummary', arguments: {
-              'authToken': dotenv.env['YFETOKEN'],
-              'baseUrl': dotenv.env['YFEBASEURL'],
-              'collaborator': 'YFE'
-            });
-          }, child: const Text('YFE'),),
-          Divider(),
-          TextButton(onPressed: () {
-            Navigator.of(context).pushNamed('clientSummary', arguments: {
-              'authToken': dotenv.env['RTE0TOKEN'],
-              'baseUrl': dotenv.env['RTE0BASEURL'],
-              'collaborator': 'RTE-0'
-            });
-          }, child: const Text('RTE-0'),),
-          Divider(),
-          TextButton(onPressed: () {
-            Navigator.of(context).pushNamed('clientSummary', arguments: {
-              'authToken': dotenv.env['RTE1TOKEN'],
-              'baseUrl': dotenv.env['RTE1BASEURL'],
-              'collaborator': 'RTE-1'
-            });
-          }, child: const Text('RTE-1'),),
+          ...buildClientsContainers()
         ],
       ),
     );

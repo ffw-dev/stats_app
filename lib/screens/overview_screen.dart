@@ -18,129 +18,88 @@ class _OverviewScreenState extends State<OverviewScreen> {
   bool loaded = false;
   bool noDataPresent = false;
   int OVERALL_PERIOD = 10;
-
+  var currentLoading = 'Loading...';
   @override
   void initState() {
     super.initState();
     loadAllClientsSummary();
   }
+  void loadAllClientsSummary() async {
+    List<String> mapTolist = [];
 
-  void loadAllClientsSummary() {
-    billingTimedSummaryItems = [];
-    DevBasicApi.productionClientApisBillingSummaryEndpoint
-        .authenticateAndGetSummary(
+    dotenv.env.forEach((key, value) {
+      mapTolist.add(value);
+    });
+
+    for(var i = 1; i <= mapTolist.length; i++) {
+      if(i % 2 != 0) {
+        var url = mapTolist[i];
+        var token = mapTolist[i-1];
+
+        await DevBasicApi.productionClientApisBillingSummaryEndpoint
+            .authenticateAndGetSummary(
             fromPeriod: OVERALL_PERIOD,
-            baseURL: dotenv.env['SVT0BASEURL']!,
-            authToken: dotenv.env['SVT0TOKEN']!)
-        .then((value) {
+            baseURL: url,
+            authToken: token)
+            .then((value) {
           setState(() {
+            currentLoading = 'We are currently loading: ' + url.substring(8).split('-basic')[0];
             billingTimedSummaryItems.addAll(value.body.results);
           });
-        })
-        .then((value) => DevBasicApi.productionClientApisBillingSummaryEndpoint
-                .authenticateAndGetSummary(
-                    fromPeriod: OVERALL_PERIOD,
-                    baseURL: dotenv.env['SVT1BASEURL']!,
-                    authToken: dotenv.env['SVT1TOKEN']!)
-                .then((value) {
-              setState(() {
-                billingTimedSummaryItems.addAll(value.body.results);
-              });
-            }))
-        .then((value) => DevBasicApi.productionClientApisBillingSummaryEndpoint
-                .authenticateAndGetSummary(
-                    fromPeriod: OVERALL_PERIOD,
-                    baseURL: dotenv.env['SVT2BASEURL']!,
-                    authToken: dotenv.env['SVT2TOKEN']!)
-                .then((value) {
-              setState(() {
-                billingTimedSummaryItems.addAll(value.body.results);
-              });
-            }))
-        .then((value) => DevBasicApi.productionClientApisBillingSummaryEndpoint
-                .authenticateAndGetSummary(
-                    fromPeriod: OVERALL_PERIOD,
-                    baseURL: dotenv.env['YFEBASEURL']!,
-                    authToken: dotenv.env['YFETOKEN']!)
-                .then((value) {
-              setState(() {
-                billingTimedSummaryItems.addAll(value.body.results);
-              });
-            }))
-        .then((value) => DevBasicApi.productionClientApisBillingSummaryEndpoint
-                .authenticateAndGetSummary(
-                    fromPeriod: OVERALL_PERIOD,
-                    baseURL: dotenv.env['RTE0BASEURL']!,
-                    authToken: dotenv.env['RTE0TOKEN']!)
-                .then((value) {
-              setState(() {
-                billingTimedSummaryItems.addAll(value.body.results);
-              });
-            }))
-        .then((value) => DevBasicApi.productionClientApisBillingSummaryEndpoint
-                .authenticateAndGetSummary(
-                    fromPeriod: OVERALL_PERIOD,
-                    baseURL: dotenv.env['RTE1BASEURL']!,
-                    authToken: dotenv.env['RTE1TOKEN']!)
-                .then((value) {
-              setState(() {
-                billingTimedSummaryItems.addAll(value.body.results);
-              });
-            }))
-        .then(
-            (value) => DevBasicApi.productionClientApisBillingSummaryEndpoint.authenticateAndGetSummary(fromPeriod: OVERALL_PERIOD, baseURL: dotenv.env['BBCBRISTOLBASEURL']!, authToken: dotenv.env['BBCBRISTOLTOKEN']!).then((value) {
-                  setState(() {
-                    billingTimedSummaryItems.addAll(value.body.results);
-                    billingTimedSummaryItems
-                        .sort((a, b) => a.date.compareTo(b.date));
-                    List<BillingTimedSummaryItem> mergedBillingSummaryItem = [];
-                    var iterationCounter = 0;
+        });
+      }
+    }
 
-                    for (var i = 0; i < OVERALL_PERIOD; i++) {
-                      if (iterationCounter >= billingTimedSummaryItems.length) {
-                        break;
-                      }
-                      var item = billingTimedSummaryItems[iterationCounter];
-                      int y = iterationCounter;
+    setState(() {
+      billingTimedSummaryItems
+          .sort((a, b) => a.date.compareTo(b.date));
+      List<BillingTimedSummaryItem> mergedBillingSummaryItem = [];
+      var iterationCounter = 0;
 
-                      var tempDigCountTotal = 0;
-                      String tempDigDuration = '';
-                      var tempFinCountTotal = 0;
-                      String tempFinDuration = '';
+      for (var i = 0; i < OVERALL_PERIOD; i++) {
+        if (iterationCounter >= billingTimedSummaryItems.length) {
+          break;
+        }
+        var item = billingTimedSummaryItems[iterationCounter];
+        int y = iterationCounter;
 
-                      while (y < billingTimedSummaryItems.length &&
-                          item.date == billingTimedSummaryItems[y].date) {
-                        tempDigCountTotal +=
-                            billingTimedSummaryItems[y].digitizationCount;
-                        tempDigDuration +=
-                            billingTimedSummaryItems[y].digitizeDuration;
-                        tempFinCountTotal +=
-                            billingTimedSummaryItems[y].finalizeCount;
-                        tempFinDuration +=
-                            billingTimedSummaryItems[y].finalizeDuration;
-                        iterationCounter++;
-                        y++;
-                      }
+        var tempDigCountTotal = 0;
+        String tempDigDuration = '';
+        var tempFinCountTotal = 0;
+        String tempFinDuration = '';
 
-                      y++;
+        while (y < billingTimedSummaryItems.length &&
+            item.date == billingTimedSummaryItems[y].date) {
+          tempDigCountTotal +=
+              billingTimedSummaryItems[y].digitizationCount;
+          tempDigDuration +=
+              billingTimedSummaryItems[y].digitizeDuration;
+          tempFinCountTotal +=
+              billingTimedSummaryItems[y].finalizeCount;
+          tempFinDuration +=
+              billingTimedSummaryItems[y].finalizeDuration;
+          iterationCounter++;
+          y++;
+        }
 
-                      mergedBillingSummaryItem.add(BillingTimedSummaryItem(
-                          date: item.date,
-                          digitizationCount: tempDigCountTotal,
-                          intermediateCount: item.intermediateCount,
-                          finalizeCount: tempFinCountTotal,
-                          exportCount: item.exportCount,
-                          digitizeDuration: tempDigDuration,
-                          intermediateDuration: '',
-                          finalizeDuration: tempFinDuration,
-                          exportDuration: '',
-                          fullName: item.fullName));
-                    }
-                    billingTimedSummaryItems = mergedBillingSummaryItem;
-                    loaded = true;
-                  });
-                }))
-        .then((value) => null);
+        y++;
+
+        mergedBillingSummaryItem.add(BillingTimedSummaryItem(
+            date: item.date,
+            digitizationCount: tempDigCountTotal,
+            intermediateCount: item.intermediateCount,
+            finalizeCount: tempFinCountTotal,
+            exportCount: item.exportCount,
+            digitizeDuration: tempDigDuration,
+            intermediateDuration: '',
+            finalizeDuration: tempFinDuration,
+            exportDuration: '',
+            fullName: item.fullName));
+      }
+      billingTimedSummaryItems = mergedBillingSummaryItem;
+      loaded = true;
+    });
+
   }
 
   @override
@@ -149,7 +108,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
       home: Scaffold(
         appBar: AppMainBar('$OVERALL_PERIOD days overview'),
         body: !loaded
-            ? const Text('loading')
+            ? Center(child: Text(currentLoading, style: TextStyle(color: Colors.red),))
             : Stack(
                 children: [
                   Positioned(

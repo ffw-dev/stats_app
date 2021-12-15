@@ -13,9 +13,7 @@ import 'screens/login_screen.dart';
 
 void main() async {
   configureInjectionDependencies();
-  await dotenv.load(fileName: ".env", mergeWith: {
-    'TEST_VAR': '5',
-  });
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 
