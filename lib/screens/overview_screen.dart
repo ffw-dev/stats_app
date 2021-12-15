@@ -157,6 +157,23 @@ class _OverviewScreenState extends State<OverviewScreen> {
                   ),
                 ],
               ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            print('asdasd');
+            setState(() {
+              loaded = false;
+              OVERALL_PERIOD += 10;
+              if (OVERALL_PERIOD > 30) {
+                OVERALL_PERIOD = 10;
+                loadAllClientsSummary();
+              } else {
+                loadAllClientsSummary();
+              }
+            });
+          },
+          backgroundColor: Colors.red,
+          child: Text(OVERALL_PERIOD.toString()),
+        ),
       ),
     );
   }
