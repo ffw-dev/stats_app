@@ -2,6 +2,8 @@ import 'package:dev_basic_api/main.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
+import 'package:stats_app/providers/monitored_clients_provider.dart';
 import 'package:stats_app/widgets/app_main_bar.dart';
 import 'package:stats_app/widgets/summaryOverview/custom_table.dart';
 import 'package:stats_app/widgets/summaryOverview/positioned_header_row.dart';
@@ -19,11 +21,14 @@ class _OverviewScreenState extends State<OverviewScreen> {
   bool noDataPresent = false;
   int OVERALL_PERIOD = 10;
   var currentLoading = 'Loading...';
+  late MonitoredClientsProvider monitoredClientsState;
+
   @override
   void initState() {
     super.initState();
     loadAllClientsSummary();
   }
+
   void loadAllClientsSummary() async {
     List<String> mapTolist = [];
 
@@ -43,7 +48,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
             authToken: token)
             .then((value) {
           setState(() {
-            currentLoading = 'We are currently loading: ' + url.substring(8).split('-basic')[0];
+            currentLoading = 'fetching data from: ' + url.substring(8).split('-basic')[0].toUpperCase();
             billingTimedSummaryItems.addAll(value.body.results);
           });
         });
@@ -108,7 +113,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
       home: Scaffold(
         appBar: AppMainBar('$OVERALL_PERIOD days overview'),
         body: !loaded
-            ? Center(child: Text(currentLoading, style: TextStyle(color: Colors.red),))
+            ? Center(child: Text(currentLoading, style: const TextStyle(color: Colors.red, fontSize: 16),))
             : Stack(
                 children: [
                   Positioned(
@@ -159,7 +164,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
               ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            print('asdasd');
             setState(() {
               loaded = false;
               OVERALL_PERIOD += 10;

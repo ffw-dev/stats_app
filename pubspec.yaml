@@ -48,6 +48,7 @@ dependencies:
     git:
       url: https://github.com/ffw-dev/dev-basic-api.git
       ref: dev_basic_clients_apis_merged
+  async_redux: ^13.2.0
 
 
 dev_dependencies:

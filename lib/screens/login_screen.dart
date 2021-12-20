@@ -1,8 +1,12 @@
 
+import 'package:async_redux/async_redux.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:stats_app/providers/authentication_provider.dart';
+import 'package:stats_app/main.dart';
+import 'package:stats_app/redux/app_state.dart';
+import 'package:stats_app/redux/authenticated_actions.dart';
+import 'package:stats_app/redux/authentication.dart';
 import 'package:stats_app/widgets/app_main_bar.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -18,7 +22,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    var authProvider = Provider.of<AuthenticationProvider>(context);
 
     return Scaffold(
         appBar: AppMainBar("Login"),
@@ -46,7 +49,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Spacer(),
                     ElevatedButton(
                         onPressed: () {
-                          authProvider.login(emailInputController.text, passwordInputController.text);
+                          Future(
+                              () => store.dispatch(LoginAction(emailInputController.text, passwordInputController.text))
+                          ).then((value) {
+                            store.state.authentication.isAuthenticated == AuthenticatedState.authenticated ? Navigator.of(context).pushNamed('/overviewScreen') : null;
+                          });
                         },
                         child: const Text('Log in')
                     )

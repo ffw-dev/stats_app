@@ -18,8 +18,11 @@ class _AppMainBarState extends State<AppMainBar> {
     return AppBar(
       backgroundColor: Colors.red,
       title: Text(widget.title),
-      actions: const [
-        IconButton(onPressed: null, icon: Icon(Icons.account_circle_outlined, color: Colors.white,))
+      actions: [
+        IconButton(onPressed: () {
+      Navigator.of(context)
+          .pushNamed('/preferences');
+    }, icon: const Icon(Icons.account_circle_outlined, color: Colors.white,))
       ],
     );
   }

@@ -4,7 +4,7 @@ import 'package:stats_app/managers/authentication/login_service.dart';
 import 'package:stats_app/managers/authentication/secure_cookie_service.dart';
 
 
-class AuthenticationProvider with ChangeNotifier {
+class Authentication {
   LoginService get _loginService => LoginService();
   AuthenticatedState isAuthenticated = AuthenticatedState.unauthenticated;
 
@@ -17,7 +17,6 @@ class AuthenticationProvider with ChangeNotifier {
       isAuthenticated = AuthenticatedState.unauthenticated;
     }
 
-    notifyListeners();
     return success;
   }
 
@@ -31,7 +30,6 @@ class AuthenticationProvider with ChangeNotifier {
       isAuthenticated = AuthenticatedState.unauthenticated;
     }
 
-    notifyListeners();
     return isAuthenticated;
   }
 
