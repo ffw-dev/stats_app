@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:stats_app/main.dart';
 import 'package:stats_app/redux/app_state.dart';
-import 'package:stats_app/redux/authenticated_actions.dart';
-import 'package:stats_app/redux/authentication.dart';
+import 'package:stats_app/redux/authentication_state_part/authenticated_actions.dart';
+import 'package:stats_app/redux/authentication_state_part/authentication.dart';
 import 'package:stats_app/widgets/app_main_bar.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -24,7 +24,6 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
 
     return Scaffold(
-        appBar: AppMainBar("Login"),
         body: Center(
           child: SizedBox(
             width: double.infinity,
@@ -52,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Future(
                               () => store.dispatch(LoginAction(emailInputController.text, passwordInputController.text))
                           ).then((value) {
-                            store.state.authentication.isAuthenticated == AuthenticatedState.authenticated ? Navigator.of(context).pushNamed('/overviewScreen') : null;
+                            store.state.authentication.isAuthenticated == AuthenticatedState.authenticated ? Navigator.of(context).popAndPushNamed('/overviewScreen') : null;
                           });
                         },
                         child: const Text('Log in')

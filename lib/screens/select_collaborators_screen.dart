@@ -3,6 +3,7 @@ import 'package:dotenv/dotenv.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:stats_app/main.dart';
 import 'package:stats_app/widgets/app_main_bar.dart';
 
 class SelectCollaborator extends StatefulWidget {
@@ -20,32 +21,20 @@ class _SelectCollaboratorState extends State<SelectCollaborator> {
 
   List<Column> buildClientsContainers() {
     List<Column> columnList = [];
-    List<String> mapTolist = [];
 
-    dotenv.env.forEach((key, value) {
-      mapTolist.add(value);
-    });
-
-    for(var i = 1; i <= mapTolist.length; i++) {
-      if(i % 2 != 0) {
-        var url = mapTolist[i];
-        var token = mapTolist[i-1];
-        var collaborator = url.substring(8);
-        collaborator = collaborator.split('-basic')[0].toUpperCase();
-
-        columnList.add(
-            Column(children: [
-              TextButton(onPressed: () {
-                Navigator.of(context).pushNamed('clientSummary', arguments: {
-                  'authToken': token,
-                  'baseUrl': url,
-                  'collaborator': collaborator
-                });
-              }, child: Text(collaborator),),
-              const Divider(),
-            ],)
-        );
-      }
+    for (var e in store.state.preferences.clientUrlTokenList) {
+      columnList.add(
+          Column(children: [
+            TextButton(onPressed: () {
+              Navigator.of(context).pushNamed('clientSummary', arguments: {
+                'authToken': e.token,
+                'baseUrl': e.url,
+                'collaborator': e.name
+              });
+            }, child: Text(e.name),),
+            const Divider(),
+          ],)
+      );
     }
 
     return columnList;
@@ -54,7 +43,10 @@ class _SelectCollaboratorState extends State<SelectCollaborator> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppMainBar('Fastforward Collaborators'),
+      appBar: AppMainBar('Fastforward Collaborators', () =>
+          Navigator.of(context).pushNamed('/preferences'),
+              () =>
+              Navigator.of(context).pushNamed('/overviewScreen')),
       body: ListView(
         children: <Widget>[
           ...buildClientsContainers()

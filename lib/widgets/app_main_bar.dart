@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 class AppMainBar extends StatefulWidget implements PreferredSizeWidget {
   String title;
+  Function goToPreferences;
+  Function goToOverview;
 
-  AppMainBar(this.title, {Key? key}) : super(key: key);
+  AppMainBar(this.title, this.goToPreferences, this.goToOverview,{Key? key}) : super(key: key);
 
   @override
   State<AppMainBar> createState() => _AppMainBarState();
@@ -19,10 +21,18 @@ class _AppMainBarState extends State<AppMainBar> {
       backgroundColor: Colors.red,
       title: Text(widget.title),
       actions: [
-        IconButton(onPressed: () {
-      Navigator.of(context)
-          .pushNamed('/preferences');
-    }, icon: const Icon(Icons.account_circle_outlined, color: Colors.white,))
+        TextButton(child: const Text('overview', style: TextStyle(color: Colors.white),),
+            onPressed: () {
+              widget.goToOverview();
+            },),
+        IconButton(
+            onPressed: () {
+              widget.goToPreferences();
+            },
+            icon: const Icon(
+              Icons.account_circle_outlined,
+              color: Colors.white,
+            )),
       ],
     );
   }

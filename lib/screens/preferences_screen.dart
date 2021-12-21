@@ -1,6 +1,10 @@
-import 'package:flutter/cupertino.dart';
+import 'package:async_redux/src/store.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider_for_redux/provider_for_redux.dart';
+import 'package:stats_app/data/client_setup_item.dart';
+import 'package:stats_app/main.dart';
+import 'package:stats_app/redux/app_state.dart';
+import 'package:stats_app/redux/preferences_state_part/preferences_actions.dart';
 import 'package:stats_app/widgets/app_main_bar.dart';
 
 class PreferencesScreen extends StatefulWidget {
@@ -11,82 +15,103 @@ class PreferencesScreen extends StatefulWidget {
 }
 
 class _PreferencesScreenState extends State<PreferencesScreen> {
-  List<String> client_url_token_list = [];
+  List<ClientSetupItem> get client_url_token_list =>
+      store.state.preferences.clientUrlTokenList;
 
   @override
   void initState() {
     super.initState();
-
-    dotenv.env.forEach((key, value) {
-      client_url_token_list.add(value);
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppMainBar('Preferences'),
-      body: ListView(
-        children: [
-          ...buildContainerList()
-        ],
+    return ReduxConsumer<AppState>(
+      builder: (ctx, store, state, dispatch, child) => Scaffold(
+        appBar: AppMainBar('Preferences', () => null, () =>
+            Navigator.of(context).popAndPushNamed('/overviewScreen')),
+        body: ListView(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  children: [
+                    const Text('On', style: TextStyle(color: Colors.red),),
+                    Switch(
+                        value: client_url_token_list
+                            .every((element) => element.monitored),
+                        activeColor: Colors.red,
+                        onChanged: (_) {
+                          setState(() {
+                            dispatch(MonitorAllAction());
+                          });
+                        }),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Text('Off', style: TextStyle(color: Colors.red),),
+                    Switch(
+                        value: client_url_token_list
+                            .every((element) => !element.monitored),
+                        activeColor: Colors.red,
+                        onChanged: (_) {
+                          setState(() {
+                            dispatch(StopMonitorAllAction());
+                          });
+                        }),
+                  ],
+                )
+              ],
+            ),
+            ...buildContainerList(dispatch)
+          ],
+        ),
       ),
     );
   }
 
-  List<Column> buildContainerList() {
+  List<Column> buildContainerList(Dispatch dispatch) {
     List<Column> list = [];
 
-    for (var i = 1; i <= client_url_token_list.length; i++) {
-      if (i % 2 != 0) {
-        var url = client_url_token_list[i];
-        var token = client_url_token_list[i - 1];
-        var collaborator = url.substring(8);
-        collaborator = collaborator.split('-basic')[0].toUpperCase();
-
-        list.add(Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pushNamed('clientSummary',
-                          arguments: {
-                            'authToken': token,
-                            'baseUrl': url,
-                            'collaborator': collaborator
-                          });
-                    },
-                    child: Text(collaborator),
-                  ),
+    for (var clientItem in client_url_token_list) {
+      list.add(Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(context)
+                        .pushNamed('clientSummary', arguments: {
+                      'authToken': clientItem.token,
+                      'baseUrl': clientItem.url,
+                      'collaborator': clientItem.name
+                    });
+                  },
+                  child: Text(clientItem.name),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: Switch(
-                      value: true, activeColor: Colors.red, onChanged: (_) {}),
-                ),
-              ],
-            ),
-            const Divider(),
-          ],
-        ));
-      }
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                child: Switch(
+                    value: clientItem.monitored,
+                    activeColor: Colors.red,
+                    onChanged: (_) {
+                      setState(() {
+                        dispatch(ClientMonitoredToggleAction(clientItem));
+                      });
+                    }),
+              ),
+            ],
+          ),
+          const Divider(),
+        ],
+      ));
     }
 
     return list;
-  }
-}
-
-class ClientSetupPreferencesItem {
-  final String value;
-  bool isMonitored = true;
-
-  ClientSetupPreferencesItem(this.value);
-
-  void toggleIsMonitored() {
-    isMonitored = !isMonitored;
   }
 }

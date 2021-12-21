@@ -52,13 +52,16 @@ class _CollaboratorOverviewScreenState
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-          appBar: AppMainBar(widget.arguments['collaborator']!),
+          appBar: AppMainBar(
+              widget.arguments['collaborator']!,
+              () => Navigator.of(context).popAndPushNamed('/preferences'),
+              () => Navigator.of(context).popAndPushNamed('/overviewScreen')),
           body: !loaded
               ? const Text('loading')
               : Stack(
                   children: [
                     Positioned(
-                      top: 0,
+                        top: 0,
                         width: MediaQuery.of(context).size.width,
                         child: Container(
                             height: 36,
@@ -92,12 +95,13 @@ class _CollaboratorOverviewScreenState
                     Positioned(
                       top: 108,
                       left: 0.0,
-                      bottom:0.0,
+                      bottom: 0.0,
                       width: MediaQuery.of(context).size.width,
                       child: noDataPresent
                           ? const Text('no data found')
-                          : RefreshIndicator(onRefresh: () async => loadBillingSummary(),
-                          child: buildTablesListView()),
+                          : RefreshIndicator(
+                              onRefresh: () async => loadBillingSummary(),
+                              child: buildTablesListView()),
                     ),
                   ],
                 )),
