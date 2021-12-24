@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stats_app/data/client_setup_item.dart';
 
 class Preferences {
@@ -8,7 +9,9 @@ class Preferences {
   List<ClientSetupItem> get filteredUrlTokenList =>
       clientUrlTokenList.where((element) => element.monitored).toList();
 
-  Preferences() {
+  Future<Preferences> initState() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     List<String> list = [];
     dotenv.env.forEach((key, value) {
       list.add(value);
@@ -25,6 +28,18 @@ class Preferences {
 
       clientUrlTokenList.add(ClientSetupItem(url, token, name));
     }
+
+    for(var client in clientUrlTokenList) {
+      var cl = sharedPreferences.getBool(client.name);
+
+      if(cl != null) {
+        client.monitored = cl;
+      } else {
+        await sharedPreferences.setBool(client.name, true);
+      }
+    }
+
+    return this;
   }
 }
 

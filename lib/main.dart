@@ -23,6 +23,7 @@ var store = Store<AppState>(initialState: AppState());
 void main() async {
   configureInjectionDependencies();
   await dotenv.load(fileName: ".env");
+  await store.state.initState();
   runApp(const MyApp());
 }
 

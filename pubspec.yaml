@@ -49,6 +49,7 @@ dependencies:
       url: https://github.com/ffw-dev/dev-basic-api.git
       ref: dev_basic_clients_apis_merged
   provider_for_redux: ^2.0.0
+  shared_preferences: ^2.0.11
 
 
 dev_dependencies:

@@ -3,5 +3,11 @@ import 'package:stats_app/redux/preferences_state_part/preferences.dart';
 
 class AppState {
   Authentication authentication = Authentication();
-  Preferences preferences = Preferences();
+  late Preferences preferences;
+
+  Future<AppState> initState() async {
+    preferences = await Preferences().initState();
+
+    return this;
+  }
 }

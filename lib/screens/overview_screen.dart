@@ -98,7 +98,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
             exportDuration: '',
             fullName: item.fullName));
       }
-      billingTimedSummaryItems = mergedBillingSummaryItem;
+      billingTimedSummaryItems = mergedBillingSummaryItem.reversed.toList();
       loaded = true;
     });
   }

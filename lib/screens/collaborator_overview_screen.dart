@@ -145,24 +145,24 @@ class _CollaboratorOverviewScreenState
       List<BillingTimedSummaryItem> filtered = [];
 
       if (selectedPeriod == Period.month) {
-        while (i < billingTimedSummaryItems.length - 1 &&
+        do {
+          filtered.add(billingTimedSummaryItems[i++]);
+        } while (i < billingTimedSummaryItems.length - 1 &&
             itemsDate.month ==
                 DateTime.fromMillisecondsSinceEpoch(
                         billingTimedSummaryItems[i].date)
-                    .month) {
-          filtered.add(billingTimedSummaryItems[i++]);
-        }
-        i++;
+                    .month);
       } else if (selectedPeriod == Period.week) {
-        while (i < billingTimedSummaryItems.length - 1 &&
-            itemsDate.weekday % 7 ==
-                DateTime.fromMillisecondsSinceEpoch(
-                            billingTimedSummaryItems[i].date)
-                        .weekday %
-                    7) {
-          filtered.add(billingTimedSummaryItems[++i]);
-        }
-        i++;
+        var maxDay = DateTime.fromMillisecondsSinceEpoch(billingTimedSummaryItems[i].date).day + 4;
+        var year = DateTime.fromMillisecondsSinceEpoch(billingTimedSummaryItems[i].date).year;
+        do{
+          filtered.add(billingTimedSummaryItems[i++]);
+        }while(
+        i <= billingTimedSummaryItems.length - 1
+            && DateTime.fromMillisecondsSinceEpoch(billingTimedSummaryItems[i].date).weekday != 5
+            && DateTime.fromMillisecondsSinceEpoch(billingTimedSummaryItems[i].date).day <= maxDay
+            && DateTime.fromMillisecondsSinceEpoch(billingTimedSummaryItems[i].date).year == year
+        );
       } else {
         filteredItemsBySelectedPeriod.add(billingTimedSummaryItems);
         break;
@@ -202,7 +202,7 @@ class _CollaboratorOverviewScreenState
           },
         ),
         RadioItem(
-          value: 'Entire period',
+          value: 'All',
           onChangedHandler: (_) {
             setState(() {
               selectedPeriod = Period.all;
