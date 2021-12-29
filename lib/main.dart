@@ -3,7 +3,6 @@ import 'package:dev_basic_api/main.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:provider_for_redux/provider_for_redux.dart';
 import 'package:stats_app/managers/authentication/secure_cookie_service.dart';
 import 'package:stats_app/managers/session_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -18,12 +17,14 @@ import 'package:stats_app/screens/select_collaborators_screen.dart';
 
 import 'screens/login_screen.dart';
 
-var store = Store<AppState>(initialState: AppState());
+var store = Store<AppState>(initialState: AppState(Authentication(), Preferences()));
+final navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   configureInjectionDependencies();
   await dotenv.load(fileName: ".env");
   await store.state.initState();
+  NavigateAction.setNavigatorKey(navigatorKey);
   runApp(const MyApp());
 }
 
@@ -40,7 +41,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     tryLoginByCookieFuture = store
-        .dispatchFuture(LoginByCookieAction())
+        .dispatchAsync(LoginByCookieAction())
         .then((value) => store.state.authentication.isAuthenticated);
 
     super.initState();
@@ -48,13 +49,13 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return AsyncReduxProvider<AppState>.value(
-        value: store,
+    return StoreProvider<AppState>(
+        store: store,
         child: MaterialApp(
+          navigatorKey: navigatorKey,
           theme:
               ThemeData(primarySwatch: Colors.red, backgroundColor: Colors.red),
           onGenerateRoute: (RouteSettings settings) {
-            print(settings.name);
             var routes = <String, WidgetBuilder>{
               "clientSummary": (ctx) =>
                   CollaboratorOverviewScreen(settings.arguments),
@@ -66,8 +67,8 @@ class _MyAppState extends State<MyApp> {
           routes: {
             '/': (_) => waitForLoginFutureAndBuildAppropriateWidget(),
             '/selectCollaborators': (_) => const SelectCollaborator(),
-            '/overviewScreen': (_) => const OverviewScreen(),
-            '/preferences': (ctx) => const PreferencesScreen()
+            '/overviewScreen': (_) => const OverviewScreenConnector(),
+            '/preferences': (_) => const PreferencesScreenConnector()
           },
         ));
   }
@@ -80,7 +81,7 @@ class _MyAppState extends State<MyApp> {
               ? const CircularProgressIndicator()
               : result.data != AuthenticatedState.authenticated
                   ? const LoginScreen()
-                  : const OverviewScreen();
+                  : const OverviewScreenConnector();
         });
   }
 }

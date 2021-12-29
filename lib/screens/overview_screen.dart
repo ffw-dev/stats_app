@@ -1,27 +1,62 @@
+import 'package:async_redux/async_redux.dart';
 import 'package:dev_basic_api/main.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:provider/provider.dart';
-import 'package:stats_app/main.dart';
+import 'package:stats_app/data/client_setup_item.dart';
+import 'package:stats_app/redux/app_state.dart';
 import 'package:stats_app/widgets/app_main_bar.dart';
 import 'package:stats_app/widgets/summaryOverview/custom_table.dart';
-import 'package:stats_app/widgets/summaryOverview/positioned_header_row.dart';
+import 'package:stats_app/widgets/summaryOverview/reel_part_headers_row.dart';
+
+class OverviewScreenConnector extends StatelessWidget {
+  const OverviewScreenConnector({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) => StoreConnector<AppState, OverviewScreenViewModel>(
+    vm: () => OverviewScreenFactory(),
+    builder: (BuildContext context, OverviewScreenViewModel vm) {
+      return OverviewScreen(filteredClientSetupItem: vm.filteredClientSetupItem, isAllClientsOff: vm.isAllClientSetupItemOff);
+    },
+  );
+}
+
+class OverviewScreenFactory extends VmFactory<AppState, OverviewScreenConnector> {
+  @override
+  Vm fromStore() =>
+      OverviewScreenViewModel(state.preferences.filteredUrlTokenList, state.preferences.filteredUrlTokenList.isEmpty);
+
+}
+
+class OverviewScreenViewModel extends Vm {
+  final List<ClientSetupItem> filteredClientSetupItem;
+  final bool isAllClientSetupItemOff;
+
+  OverviewScreenViewModel(this.filteredClientSetupItem, this.isAllClientSetupItemOff) : super(equals: [...filteredClientSetupItem, isAllClientSetupItemOff]);
+}
 
 class OverviewScreen extends StatefulWidget {
-  const OverviewScreen({Key? key}) : super(key: key);
+  final List<ClientSetupItem> filteredClientSetupItem;
+  final bool isAllClientsOff;
+
+  const OverviewScreen({Key? key, required this.filteredClientSetupItem, required this.isAllClientsOff}) : super(key: key);
 
   @override
   _OverviewScreenState createState() => _OverviewScreenState();
 }
 
 class _OverviewScreenState extends State<OverviewScreen> {
+
   late List<BillingTimedSummaryItem> billingTimedSummaryItems = [];
-  bool loaded = false;
-  bool allMonitoredOff = false;
-  bool noDataPresent = false;
-  int OVERALL_PERIOD = 10;
+  bool isDataLoaded = false;
+  bool noDataFound = false;
+  int overallPeriod = 10;
   var currentLoading = 'Loading...';
+
+  @override
+  void didUpdateWidget(covariant OverviewScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    loadAllClientsSummary();
+  }
 
   @override
   void initState() {
@@ -29,25 +64,34 @@ class _OverviewScreenState extends State<OverviewScreen> {
     loadAllClientsSummary();
   }
 
+  @override
+  Widget build(BuildContext context) {
+
+    return Scaffold(
+      appBar: AppMainBarConnector('$overallPeriod days overview',),
+      body: widget.isAllClientsOff
+          ? buildAllMonitoredOffColumn(context)
+          : !isDataLoaded
+          ? buildCurrentLoading()
+          : Stack(
+        children: [
+          buildSelectCollaborator(context),
+          buildReelPartHeadersRow(context),
+          buildRefreshIndicatorBillingSummaryTables(context),
+        ],
+      ),
+      floatingActionButton: buildIncrementPeriodButton(),
+    );
+  }
+
   void loadAllClientsSummary() async {
     billingTimedSummaryItems = [];
-    loaded = false;
+    isDataLoaded = false;
 
-    if (store.state.preferences.filteredUrlTokenList.isEmpty) {
-      setState(() {
-        allMonitoredOff = true;
-      });
-      return;
-    } else {
-      setState(() {
-        allMonitoredOff = false;
-      });
-    }
-
-    for (var e in store.state.preferences.filteredUrlTokenList) {
+    for (var e in widget.filteredClientSetupItem) {
       await DevBasicApi.productionClientApisBillingSummaryEndpoint
           .authenticateAndGetSummary(
-              fromPeriod: OVERALL_PERIOD, baseURL: e.url, authToken: e.token)
+              fromPeriod: DateTime.now().subtract(Duration(days: overallPeriod)), baseURL: e.url, authToken: e.token)
           .then((value) {
         setState(() {
           currentLoading = 'fetching data from: ' +
@@ -57,148 +101,155 @@ class _OverviewScreenState extends State<OverviewScreen> {
       });
     }
 
-    setState(() {
-      billingTimedSummaryItems.sort((a, b) => a.date.compareTo(b.date));
-      List<BillingTimedSummaryItem> mergedBillingSummaryItem = [];
-      var iterationCounter = 0;
+    billingTimedSummaryItems.sort((a, b) => a.date.compareTo(b.date));
+    List<BillingTimedSummaryItem> mergedBillingSummaryItem = [];
+    var iterationCounter = 0;
 
-      for (var i = 0; i < OVERALL_PERIOD; i++) {
-        if (iterationCounter >= billingTimedSummaryItems.length) {
-          break;
-        }
-        var item = billingTimedSummaryItems[iterationCounter];
-        int y = iterationCounter;
-
-        var tempDigCountTotal = 0;
-        String tempDigDuration = '';
-        var tempFinCountTotal = 0;
-        String tempFinDuration = '';
-
-        while (y < billingTimedSummaryItems.length &&
-            item.date == billingTimedSummaryItems[y].date) {
-          tempDigCountTotal += billingTimedSummaryItems[y].digitizationCount;
-          tempDigDuration += billingTimedSummaryItems[y].digitizeDuration;
-          tempFinCountTotal += billingTimedSummaryItems[y].finalizeCount;
-          tempFinDuration += billingTimedSummaryItems[y].finalizeDuration;
-          iterationCounter++;
-          y++;
-        }
-
-        y++;
-
-        mergedBillingSummaryItem.add(BillingTimedSummaryItem(
-            date: item.date,
-            digitizationCount: tempDigCountTotal,
-            intermediateCount: item.intermediateCount,
-            finalizeCount: tempFinCountTotal,
-            exportCount: item.exportCount,
-            digitizeDuration: tempDigDuration,
-            intermediateDuration: '',
-            finalizeDuration: tempFinDuration,
-            exportDuration: '',
-            fullName: item.fullName));
+    for (var i = 0; i < overallPeriod; i++) {
+      if (iterationCounter >= billingTimedSummaryItems.length) {
+        break;
       }
+      var item = billingTimedSummaryItems[iterationCounter];
+      int y = iterationCounter;
+
+      var tempDigCountTotal = 0;
+      String tempDigDuration = '';
+      var tempFinCountTotal = 0;
+      String tempFinDuration = '';
+
+      while (y < billingTimedSummaryItems.length &&
+          item.date == billingTimedSummaryItems[y].date) {
+        tempDigCountTotal += billingTimedSummaryItems[y].digitizationCount;
+        tempDigDuration += billingTimedSummaryItems[y].digitizeDuration;
+        tempFinCountTotal += billingTimedSummaryItems[y].finalizeCount;
+        tempFinDuration += billingTimedSummaryItems[y].finalizeDuration;
+        iterationCounter++;
+        y++;
+      }
+
+      y++;
+
+      mergedBillingSummaryItem.add(BillingTimedSummaryItem(
+          date: item.date,
+          digitizationCount: tempDigCountTotal,
+          intermediateCount: item.intermediateCount,
+          finalizeCount: tempFinCountTotal,
+          exportCount: item.exportCount,
+          digitizeDuration: tempDigDuration,
+          intermediateDuration: '',
+          finalizeDuration: tempFinDuration,
+          exportDuration: '',
+          fullName: item.fullName));
+    }
+    setState(() {
       billingTimedSummaryItems = mergedBillingSummaryItem.reversed.toList();
-      loaded = true;
+      isDataLoaded = true;
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppMainBar('$OVERALL_PERIOD days overview',
-            () => Navigator.of(context).popAndPushNamed('/preferences'), () =>
-                Navigator.of(context).popAndPushNamed('/overviewScreen')),
-        body: allMonitoredOff
-            ? Column(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.all(34),
-                    child: Text(
-                        'All monitored clients are turned off, please turn on what clients overview you want to see'),
-                  ),
-                  TextButton(
-                      onPressed: () =>
-                          Navigator.of(context).pushNamed('/preferences'),
-                      child: const Text('go to preferences')),
-                  TextButton(
-                      onPressed: () =>
-                          loadAllClientsSummary(),
-                      child: const Text('load overview')),
-                ],
-              )
-            : !loaded
-                ? Center(
-                    child: Text(
-                    currentLoading,
-                    style: const TextStyle(color: Colors.red, fontSize: 16),
-                  ))
-                : Stack(
-                    children: [
-                      Positioned(
-                          top: 0,
-                          height: 36,
-                          width: MediaQuery.of(context).size.width,
-                          child: Container(
-                            decoration: const BoxDecoration(color: Colors.red),
-                            child: TextButton(
-                              onPressed: () {
-                                Navigator.of(context)
-                                    .popAndPushNamed('/selectCollaborators');
+  void incrementOverallPeriod() {
+    setState(() {
+      isDataLoaded = false;
+      overallPeriod += 10;
+      if (overallPeriod > 30) {
+        overallPeriod = 10;
+        loadAllClientsSummary();
+      } else {
+        loadAllClientsSummary();
+      }
+    });
+  }
+
+  FloatingActionButton buildIncrementPeriodButton() {
+    return FloatingActionButton(
+        onPressed: () {
+          incrementOverallPeriod();
+        },
+        backgroundColor: Colors.red,
+        child: Text(overallPeriod.toString()),
+      );
+  }
+
+  Positioned buildRefreshIndicatorBillingSummaryTables(BuildContext context) {
+    return Positioned(
+                      top: 72,
+                      left: 0.0,
+                      bottom: 0.0,
+                      width: MediaQuery.of(context).size.width,
+                      child: noDataFound
+                          ? const Text('no data found')
+                          : RefreshIndicator(
+                              onRefresh: () async {
+                                loadAllClientsSummary();
                               },
-                              child: const Text(
-                                'Select collaborator',
-                                style: TextStyle(color: Colors.white),
+                              child: ListView(
+                                children: [
+                                  CustomTable(
+                                      filteredBillingTimedSummaryItems:
+                                          billingTimedSummaryItems,
+                                      fromPeriod: 'Overall'),
+                                ],
                               ),
                             ),
-                          )),
-                      Positioned(
-                          top: 36,
-                          height: 36,
-                          width: MediaQuery.of(context).size.width,
-                          child: Container(
-                            decoration: const BoxDecoration(color: Colors.red),
-                            child: const PositionedHeaderRow(),
-                          )),
-                      Positioned(
-                        top: 72,
-                        left: 0.0,
-                        bottom: 0.0,
+                    );
+  }
+
+  Positioned buildReelPartHeadersRow(BuildContext context) {
+    return Positioned(
+                        top: 36,
+                        height: 36,
                         width: MediaQuery.of(context).size.width,
-                        child: noDataPresent
-                            ? const Text('no data found')
-                            : RefreshIndicator(
-                                onRefresh: () async => loadAllClientsSummary(),
-                                child: ListView(
-                                  children: [
-                                    CustomTable(
-                                        filteredBillingTimedSummaryItems:
-                                            billingTimedSummaryItems,
-                                        fromPeriod: 'Overall'),
-                                  ],
-                                ),
-                              ),
-                      ),
-                    ],
-                  ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            setState(() {
-              loaded = false;
-              OVERALL_PERIOD += 10;
-              if (OVERALL_PERIOD > 30) {
-                OVERALL_PERIOD = 10;
-                loadAllClientsSummary();
-              } else {
-                loadAllClientsSummary();
-              }
-            });
-          },
-          backgroundColor: Colors.red,
-          child: Text(OVERALL_PERIOD.toString()),
-        ),
-      ),
-    );
+                        child: Container(
+                          decoration: const BoxDecoration(color: Colors.red),
+                          child: const ReelPartHeadersRow(),
+                        ));
+  }
+
+  Positioned buildSelectCollaborator(BuildContext context) {
+    return Positioned(
+                        top: 0,
+                        height: 36,
+                        width: MediaQuery.of(context).size.width,
+                        child: Container(
+                          decoration: const BoxDecoration(color: Colors.red),
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.of(context)
+                                  .popAndPushNamed('/selectCollaborators');
+                            },
+                            child: const Text(
+                              'Select collaborator',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ));
+  }
+
+  Center buildCurrentLoading() {
+    return Center(
+                  child: Text(
+                  currentLoading,
+                  style: const TextStyle(color: Colors.red, fontSize: 16),
+                ));
+  }
+
+  Column buildAllMonitoredOffColumn(BuildContext context) {
+    return Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(34),
+                  child: Text(
+                      'All monitored clients are turned off, please turn on what clients overview you want to see'),
+                ),
+                TextButton(
+                    onPressed: () =>
+                        Navigator.of(context).pushNamed('/preferences').then((value) => setState((){})),
+                    child: const Text('go to preferences')),
+                TextButton(
+                    onPressed: () =>
+                        loadAllClientsSummary(),
+                    child: const Text('load overview')),
+              ],
+            );
   }
 }

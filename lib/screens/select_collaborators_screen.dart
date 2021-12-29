@@ -19,39 +19,39 @@ class _SelectCollaboratorState extends State<SelectCollaborator> {
     super.initState();
   }
 
-  List<Column> buildClientsContainers() {
-    List<Column> columnList = [];
-
-    for (var e in store.state.preferences.clientUrlTokenList) {
-      columnList.add(
-          Column(children: [
-            TextButton(onPressed: () {
-              Navigator.of(context).pushNamed('clientSummary', arguments: {
-                'authToken': e.token,
-                'baseUrl': e.url,
-                'collaborator': e.name
-              });
-            }, child: Text(e.name),),
-            const Divider(),
-          ],)
-      );
-    }
-
-    return columnList;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppMainBar('Fastforward Collaborators', () =>
-          Navigator.of(context).pushNamed('/preferences'),
-              () =>
-              Navigator.of(context).pushNamed('/overviewScreen')),
+      appBar: const AppMainBarConnector(
+        'Fastforward Collaborators',
+      ),
       body: ListView(
-        children: <Widget>[
-          ...buildClientsContainers()
-        ],
+        children: <Widget>[...buildClientsContainers()],
       ),
     );
+  }
+
+  List<Column> buildClientsContainers() {
+    List<Column> columnList = [];
+
+    for (var clientItem in store.state.preferences.clientSetupItems) {
+      columnList.add(Column(
+        children: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pushNamed('clientSummary', arguments: {
+                'authToken': clientItem.token,
+                'baseUrl': clientItem.url,
+                'collaborator': clientItem.name
+              });
+            },
+            child: Text(clientItem.name),
+          ),
+          const Divider(),
+        ],
+      ));
+    }
+
+    return columnList;
   }
 }

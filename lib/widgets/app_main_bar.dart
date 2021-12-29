@@ -1,11 +1,48 @@
+import 'package:async_redux/async_redux.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:stats_app/redux/app_state.dart';
+import 'package:stats_app/redux/preferences_state_part/preferences.dart';
+import 'package:stats_app/screens/preferences_screen.dart';
+
+class AppMainBarConnector extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+
+  const AppMainBarConnector(this.title, {Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return StoreConnector<AppState, AppMainBarViewModel>(
+        vm: () => AppMainBarFactory(title, this),
+        builder: (ctx, vm) => AppMainBar(vm.title));
+  }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+class AppMainBarFactory extends VmFactory<AppState, AppMainBarConnector> {
+  String title;
+
+  AppMainBarFactory(this.title, widget) : super(widget);
+
+  @override
+  Vm fromStore() => AppMainBarViewModel(title);
+}
+
+class AppMainBarViewModel extends Vm {
+  final String title;
+
+  AppMainBarViewModel(this.title);
+}
 
 class AppMainBar extends StatefulWidget implements PreferredSizeWidget {
-  String title;
-  Function goToPreferences;
-  Function goToOverview;
+  final String title;
 
-  AppMainBar(this.title, this.goToPreferences, this.goToOverview,{Key? key}) : super(key: key);
+  const AppMainBar(
+    this.title, {
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<AppMainBar> createState() => _AppMainBarState();
@@ -17,23 +54,27 @@ class AppMainBar extends StatefulWidget implements PreferredSizeWidget {
 class _AppMainBarState extends State<AppMainBar> {
   @override
   Widget build(BuildContext context) {
+    var isRoutePreferences = ModalRoute.of(context)?.settings.name;
+
     return AppBar(
+      elevation: 0,
       backgroundColor: Colors.red,
       title: Text(widget.title),
       actions: [
-        TextButton(child: const Text('overview', style: TextStyle(color: Colors.white),),
+        if (isRoutePreferences != null)
+          buildPreferencesIconButton(context)
+      ],
+    );
+  }
+
+  IconButton buildPreferencesIconButton(BuildContext context) {
+    return IconButton(
             onPressed: () {
-              widget.goToOverview();
-            },),
-        IconButton(
-            onPressed: () {
-              widget.goToPreferences();
+              Navigator.push( context, MaterialPageRoute( builder: (context) => PreferencesScreenConnector()), );
             },
             icon: const Icon(
               Icons.account_circle_outlined,
               color: Colors.white,
-            )),
-      ],
-    );
+            ));
   }
 }

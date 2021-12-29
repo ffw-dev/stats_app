@@ -7,7 +7,7 @@ class CustomTable extends StatelessWidget {
 
   final List<BillingTimedSummaryItem> filteredBillingTimedSummaryItems;
 
-  const CustomTable({Key? key, required this.filteredBillingTimedSummaryItems, required this.fromPeriod}) : super(key: key);
+  CustomTable({Key? key, required this.filteredBillingTimedSummaryItems, required this.fromPeriod}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:stats_app/widgets/app_main_bar.dart';
 import 'package:stats_app/widgets/summaryOverview/custom_table.dart';
 import 'package:stats_app/widgets/summaryOverview/radio_item.dart';
+import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 class CollaboratorOverviewScreen extends StatefulWidget {
   final dynamic arguments;
@@ -29,6 +30,11 @@ class _CollaboratorOverviewScreenState
   bool noDataPresent = false;
   Period selectedPeriod = Period.month;
 
+  bool isPeriodSelected = false;
+
+  DateTime? toPeriod = null;
+  DateTime fromPeriod = DateTime.now().subtract(Duration(days: 20000));
+
   @override
   void initState() {
     super.initState();
@@ -37,27 +43,75 @@ class _CollaboratorOverviewScreenState
 
   void loadBillingSummary() {
     DevBasicApi.productionClientApisBillingSummaryEndpoint
-        .authenticateAndGetSummary(
+        .authenticateAndGetSummaryFromRange(
+            to: toPeriod,
+            fromPeriod: fromPeriod,
             baseURL: widget.arguments['baseUrl']!,
             authToken: widget.arguments['authToken']!)
         .then((value) {
       setState(() {
+        if(value.body.results.isEmpty) {
+          noDataPresent = true;
+        } else {
+          noDataPresent = false;
+        }
         billingTimedSummaryItems = value.body.results;
         loaded = true;
       });
     });
   }
 
+  void showDialog() {
+    showGeneralDialog(
+      barrierLabel: "Barrier",
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.5),
+      transitionDuration: Duration(milliseconds: 200),
+      context: context,
+      pageBuilder: (_, __, ___) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SfDateRangePicker(
+
+                onSelectionChanged: (args) {
+                  setState(() {
+                    fromPeriod = args.value.startDate;
+                    toPeriod = args.value.endDate;
+                    toPeriod = toPeriod?.add(Duration(days: 1));
+                    isPeriodSelected = true;
+                    loadBillingSummary();
+                  });
+                },
+                backgroundColor: Colors.white,
+                selectionMode: DateRangePickerSelectionMode.range,
+                navigationDirection: DateRangePickerNavigationDirection.vertical,
+              ),
+              TextButton(onPressed: () {Navigator.of(context).pop();}, child: Text('Select'))
+            ],
+          ),
+        );
+      },
+      transitionBuilder: (_, anim, __, child) {
+        return SlideTransition(
+          position: Tween(begin: Offset(0, 1), end: Offset(0, 0)).animate(anim),
+          child: child,
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-          appBar: AppMainBar(
-              widget.arguments['collaborator']!,
-              () => Navigator.of(context).popAndPushNamed('/preferences'),
-              () => Navigator.of(context).popAndPushNamed('/overviewScreen')),
+          appBar: AppMainBarConnector(widget.arguments['collaborator']!),
           body: !loaded
-              ? const Text('loading')
+              ? const Center(child: Text('loading'))
               : Stack(
                   children: [
                     Positioned(
@@ -66,7 +120,21 @@ class _CollaboratorOverviewScreenState
                         child: Container(
                             height: 36,
                             decoration: const BoxDecoration(color: Colors.red),
-                            child: buildRadioRow())),
+                            child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  buildRadioRow(),
+                                  TextButton(
+                                    onPressed: () {
+                                      showDialog();
+                                    },
+                                    child: const Text(
+                                      'From period',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ]))),
                     Positioned(
                         top: 36,
                         height: 36,
@@ -98,11 +166,26 @@ class _CollaboratorOverviewScreenState
                       bottom: 0.0,
                       width: MediaQuery.of(context).size.width,
                       child: noDataPresent
-                          ? const Text('no data found')
+                          ? Center(child: const Text('no data found'))
                           : RefreshIndicator(
                               onRefresh: () async => loadBillingSummary(),
                               child: buildTablesListView()),
                     ),
+                    if (isPeriodSelected)
+                      Positioned(
+                        top: MediaQuery.of(context).size.height / 1.4,
+                          left: MediaQuery.of(context).size.width / 2 - MediaQuery.of(context).size.width % 50,
+                          bottom: 0.0,
+                          child: TextButton(child: Text('Reset period'),
+                        onPressed: () {
+                          setState(() {
+                            isPeriodSelected = false;
+                            loaded = false;
+                            toPeriod = null;
+                            fromPeriod = DateTime.now().subtract(Duration(days: 20000));
+                            loadBillingSummary();
+                          });
+                        },))
                   ],
                 )),
     );
@@ -147,22 +230,34 @@ class _CollaboratorOverviewScreenState
       if (selectedPeriod == Period.month) {
         do {
           filtered.add(billingTimedSummaryItems[i++]);
-        } while (i < billingTimedSummaryItems.length - 1 &&
+        } while (i <= billingTimedSummaryItems.length - 1 &&
             itemsDate.month ==
                 DateTime.fromMillisecondsSinceEpoch(
                         billingTimedSummaryItems[i].date)
                     .month);
       } else if (selectedPeriod == Period.week) {
-        var maxDay = DateTime.fromMillisecondsSinceEpoch(billingTimedSummaryItems[i].date).day + 4;
-        var year = DateTime.fromMillisecondsSinceEpoch(billingTimedSummaryItems[i].date).year;
-        do{
+        var maxDay = DateTime.fromMillisecondsSinceEpoch(
+                    billingTimedSummaryItems[i].date)
+                .day +
+            4;
+        var year = DateTime.fromMillisecondsSinceEpoch(
+                billingTimedSummaryItems[i].date)
+            .year;
+        do {
           filtered.add(billingTimedSummaryItems[i++]);
-        }while(
-        i <= billingTimedSummaryItems.length - 1
-            && DateTime.fromMillisecondsSinceEpoch(billingTimedSummaryItems[i].date).weekday != 5
-            && DateTime.fromMillisecondsSinceEpoch(billingTimedSummaryItems[i].date).day <= maxDay
-            && DateTime.fromMillisecondsSinceEpoch(billingTimedSummaryItems[i].date).year == year
-        );
+        } while (i <= billingTimedSummaryItems.length - 1 &&
+            DateTime.fromMillisecondsSinceEpoch(
+                        billingTimedSummaryItems[i].date)
+                    .weekday !=
+                5 &&
+            DateTime.fromMillisecondsSinceEpoch(
+                        billingTimedSummaryItems[i].date)
+                    .day <=
+                maxDay &&
+            DateTime.fromMillisecondsSinceEpoch(
+                        billingTimedSummaryItems[i].date)
+                    .year ==
+                year);
       } else {
         filteredItemsBySelectedPeriod.add(billingTimedSummaryItems);
         break;

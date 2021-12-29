@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class PositionedHeaderRow extends StatelessWidget {
-  const PositionedHeaderRow({Key? key}) : super(key: key);
+class ReelPartHeadersRow extends StatelessWidget {
+  const ReelPartHeadersRow({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

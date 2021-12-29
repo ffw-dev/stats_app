@@ -37,7 +37,7 @@ dependencies:
   dio: 4.0.1
   http: 0.13.4
   provider: 5.0.0
-  path_provider: 2.0.6
+  path_provider: 2.0.8
   flutter_secure_storage: 5.0.0-beta.5
   json_annotation: 4.3.0
   json_serializable: 6.0.1
@@ -48,8 +48,10 @@ dependencies:
     git:
       url: https://github.com/ffw-dev/dev-basic-api.git
       ref: dev_basic_clients_apis_merged
-  provider_for_redux: ^2.0.0
   shared_preferences: ^2.0.11
+  async_redux: 13.2.2
+  syncfusion_flutter_datepicker: ^19.4.38
+  fast_immutable_collections: ^7.1.2
 
 
 dev_dependencies:

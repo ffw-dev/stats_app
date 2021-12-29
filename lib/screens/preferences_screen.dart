@@ -1,80 +1,112 @@
-import 'package:async_redux/src/store.dart';
+import 'package:async_redux/async_redux.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/material.dart';
-import 'package:provider_for_redux/provider_for_redux.dart';
 import 'package:stats_app/data/client_setup_item.dart';
-import 'package:stats_app/main.dart';
 import 'package:stats_app/redux/app_state.dart';
 import 'package:stats_app/redux/preferences_state_part/preferences_actions.dart';
 import 'package:stats_app/widgets/app_main_bar.dart';
 
-class PreferencesScreen extends StatefulWidget {
-  const PreferencesScreen({Key? key}) : super(key: key);
+class PreferencesScreenConnector extends StatelessWidget {
+  const PreferencesScreenConnector({Key? key}) : super(key: key);
 
   @override
-  State<PreferencesScreen> createState() => _PreferencesScreenState();
+  Widget build(BuildContext context) => StoreConnector<AppState, PreferencesScreenViewModel>(
+    vm: () => PreferencesScreenFactory(),
+    builder: (BuildContext context, PreferencesScreenViewModel vm) {
+      return PreferencesScreen(vm.clientSetupItems, vm.onToggleClient, vm.onTurnOnAll, vm.onTurnOffAll);
+    },
+  );
+
 }
 
-class _PreferencesScreenState extends State<PreferencesScreen> {
-  List<ClientSetupItem> get client_url_token_list =>
-      store.state.preferences.clientUrlTokenList;
-
+class PreferencesScreenFactory extends VmFactory<AppState, PreferencesScreenConnector> {
   @override
-  void initState() {
-    super.initState();
-  }
+  Vm fromStore() => PreferencesScreenViewModel(
+      state.preferences.clientSetupItems,
+      (ClientSetupItem clientItem) => dispatch(ClientMonitoredToggleAction(clientItem)),
+      () => dispatch(MonitorAllAction()),
+      () => dispatch(StopMonitorAllAction()),
+  );
+}
+
+class PreferencesScreenViewModel extends Vm {
+  final IList<ClientSetupItem> clientSetupItems;
+  final Function(ClientSetupItem clientItem) onToggleClient;
+  final Function onTurnOffAll;
+  final Function onTurnOnAll;
+
+  PreferencesScreenViewModel(
+      this.clientSetupItems,
+      this.onToggleClient,
+      this.onTurnOnAll,
+      this.onTurnOffAll) : super(equals: [...clientSetupItems]);
+}
+
+class PreferencesScreen extends StatelessWidget {
+  final IList<ClientSetupItem> clientUrlTokenList;
+  final Function(ClientSetupItem clientItem) onToggleClient;
+  final Function onTurnOffAll;
+  final Function onTurnOnAll;
+
+  const PreferencesScreen(this.clientUrlTokenList, this.onToggleClient, this.onTurnOnAll, this.onTurnOffAll, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ReduxConsumer<AppState>(
-      builder: (ctx, store, state, dispatch, child) => Scaffold(
-        appBar: AppMainBar('Preferences', () => null, () =>
-            Navigator.of(context).popAndPushNamed('/overviewScreen')),
-        body: ListView(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    const Text('On', style: TextStyle(color: Colors.red),),
-                    Switch(
-                        value: client_url_token_list
-                            .every((element) => element.monitored),
-                        activeColor: Colors.red,
-                        onChanged: (_) {
-                          setState(() {
-                            dispatch(MonitorAllAction());
-                          });
-                        }),
-                  ],
-                ),
-                Row(
-                  children: [
-                    const Text('Off', style: TextStyle(color: Colors.red),),
-                    Switch(
-                        value: client_url_token_list
-                            .every((element) => !element.monitored),
-                        activeColor: Colors.red,
-                        onChanged: (_) {
-                          setState(() {
-                            dispatch(StopMonitorAllAction());
-                          });
-                        }),
-                  ],
-                )
-              ],
-            ),
-            ...buildContainerList(dispatch)
-          ],
-        ),
+    return Scaffold(
+      appBar: const AppMainBarConnector('Preferences',),
+      body: ListView(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              buildToggleOnSwitchRow(),
+              buildToggleOffSwitchRow()
+            ],
+          ),
+          ...buildClientPreferenceRow()
+        ],
       ),
     );
   }
 
-  List<Column> buildContainerList(Dispatch dispatch) {
+  Row buildToggleOffSwitchRow() {
+    return Row(
+      children: [
+        const Text(
+          'Off',
+          style: TextStyle(color: Colors.red),
+        ),
+        Switch(
+            value: clientUrlTokenList.every((element) => !element.monitored),
+            activeColor: Colors.red,
+            onChanged: (_) {
+              onTurnOffAll();
+            }),
+      ],
+    );
+  }
+
+  Row buildToggleOnSwitchRow() {
+    return Row(
+      children: [
+        const Text(
+          'On',
+          style: TextStyle(color: Colors.red),
+        ),
+        Switch(
+            value: clientUrlTokenList.every((element) => element.monitored),
+            activeColor: Colors.red,
+            onChanged: (_) {
+              onTurnOnAll();
+            }),
+      ],
+    );
+  }
+
+  List<Column> buildClientPreferenceRow() {
     List<Column> list = [];
 
-    for (var clientItem in client_url_token_list) {
+    for (var clientItem in clientUrlTokenList) {
       list.add(Column(
         children: [
           Row(
@@ -82,28 +114,15 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.of(context)
-                        .pushNamed('clientSummary', arguments: {
-                      'authToken': clientItem.token,
-                      'baseUrl': clientItem.url,
-                      'collaborator': clientItem.name
-                    });
-                  },
-                  child: Text(clientItem.name),
-                ),
+                child: Text(clientItem.name),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32.0),
                 child: Switch(
                     value: clientItem.monitored,
                     activeColor: Colors.red,
-                    onChanged: (_) {
-                      setState(() {
-                        dispatch(ClientMonitoredToggleAction(clientItem));
-                      });
-                    }),
+                    onChanged: (_) =>
+                        dispatchToggleMonitored(clientItem)),
               ),
             ],
           ),
@@ -114,4 +133,10 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
 
     return list;
   }
+
+  void dispatchToggleMonitored(
+      ClientSetupItem clientItem) {
+    onToggleClient(clientItem);
+  }
 }
+
