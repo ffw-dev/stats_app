@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:stats_app/redux/app_state.dart';
 import 'package:stats_app/redux/preferences_state_part/preferences.dart';
+import 'package:stats_app/screens/overview_screen.dart';
 import 'package:stats_app/screens/preferences_screen.dart';
 
 class AppMainBarConnector extends StatelessWidget implements PreferredSizeWidget {
@@ -62,7 +63,8 @@ class _AppMainBarState extends State<AppMainBar> {
       title: Text(widget.title),
       actions: [
         if (isRoutePreferences != null)
-          buildPreferencesIconButton(context)
+          buildPreferencesIconButton(context),
+        buildOverviewIconButton(context)
       ],
     );
   }
@@ -76,5 +78,16 @@ class _AppMainBarState extends State<AppMainBar> {
               Icons.account_circle_outlined,
               color: Colors.white,
             ));
+  }
+
+  IconButton buildOverviewIconButton(BuildContext context) {
+    return IconButton(
+        onPressed: () {
+          Navigator.push( context, MaterialPageRoute( builder: (context) => OverviewScreenConnector()), );
+        },
+        icon: const Icon(
+          Icons.add_chart,
+          color: Colors.white,
+        ));
   }
 }
