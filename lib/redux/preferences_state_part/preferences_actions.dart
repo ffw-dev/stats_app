@@ -38,7 +38,7 @@ class MonitorAllAction extends ReduxAction<AppState> {
     }
 
     state.preferences.clientSetupItems = IList(state.preferences.clientSetupItems);
-
+    
     return state.copy(authentication: state.authentication, preferences: state.preferences);
   }
 }
@@ -50,8 +50,6 @@ class StopMonitorAllAction extends ReduxAction<AppState> {
       element.monitored = false;
       SharedPreferences.getInstance().then((value) => value.setBool(element.name, false));
     }
-
-    state.preferences.clientSetupItems = IList(state.preferences.clientSetupItems);
 
     return state.copy(authentication: state.authentication, preferences: state.preferences);  }
 }

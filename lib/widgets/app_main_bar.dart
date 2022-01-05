@@ -55,15 +55,13 @@ class AppMainBar extends StatefulWidget implements PreferredSizeWidget {
 class _AppMainBarState extends State<AppMainBar> {
   @override
   Widget build(BuildContext context) {
-    var isRoutePreferences = ModalRoute.of(context)?.settings.name;
 
     return AppBar(
       elevation: 0,
       backgroundColor: Colors.red,
       title: Text(widget.title),
       actions: [
-        if (isRoutePreferences != null)
-          buildPreferencesIconButton(context),
+        buildPreferencesIconButton(context),
         buildOverviewIconButton(context)
       ],
     );
