@@ -87,7 +87,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
   void loadAllClientsSummary() async {
     billingTimedSummaryItems = [];
     isDataLoaded = false;
-
+    print('lol');
     for (var e in widget.filteredClientSetupItem) {
       await DevBasicApi.productionClientApisBillingSummaryEndpoint
           .authenticateAndGetSummary(

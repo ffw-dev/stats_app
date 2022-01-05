@@ -21,12 +21,14 @@ class PreferencesScreenConnector extends StatelessWidget {
 
 class PreferencesScreenFactory extends VmFactory<AppState, PreferencesScreenConnector> {
   @override
-  Vm fromStore() => PreferencesScreenViewModel(
+  Vm fromStore() {
+    return PreferencesScreenViewModel(
       state.preferences.clientSetupItems,
-      (ClientSetupItem clientItem) => dispatch(ClientMonitoredToggleAction(clientItem)),
-      () => dispatch(MonitorAllAction()),
-      () => dispatch(StopMonitorAllAction()),
-  );
+          (ClientSetupItem clientItem) => dispatch(ClientMonitoredToggleAction(clientItem)),
+          () => dispatch(MonitorAllAction()),
+          () => dispatch(StopMonitorAllAction()),
+    );
+  }
 }
 
 class PreferencesScreenViewModel extends Vm {

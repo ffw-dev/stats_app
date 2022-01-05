@@ -70,7 +70,7 @@ class _AppMainBarState extends State<AppMainBar> {
   IconButton buildPreferencesIconButton(BuildContext context) {
     return IconButton(
             onPressed: () {
-              Navigator.push( context, MaterialPageRoute( builder: (context) => PreferencesScreenConnector()), );
+              Navigator.popAndPushNamed(context, '/preferences');
             },
             icon: const Icon(
               Icons.account_circle_outlined,
@@ -81,7 +81,7 @@ class _AppMainBarState extends State<AppMainBar> {
   IconButton buildOverviewIconButton(BuildContext context) {
     return IconButton(
         onPressed: () {
-          Navigator.push( context, MaterialPageRoute( builder: (context) => OverviewScreenConnector()), );
+          Navigator.popAndPushNamed( context, '/overviewScreen');
         },
         icon: const Icon(
           Icons.add_chart,
