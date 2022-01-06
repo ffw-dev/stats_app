@@ -15,7 +15,7 @@ class RadioItem extends StatelessWidget {
             data: ThemeData(unselectedWidgetColor: Colors.white),
             child: Radio(
               value: value,
-              groupValue: null,
+              groupValue: 'null',
               onChanged: onChangedHandler,
               activeColor: Colors.white,
             )),
