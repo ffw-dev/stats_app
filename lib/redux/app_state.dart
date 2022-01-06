@@ -19,7 +19,9 @@ class AppState {
     required Authentication authentication,
     required Preferences preferences,
   }) {
-    return AppState(authentication, preferences);
+    return AppState(
+     this.authentication, this.preferences,
+    );
   }
 
   @override

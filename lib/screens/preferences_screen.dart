@@ -41,7 +41,7 @@ class PreferencesScreenViewModel extends Vm {
       this.clientSetupItems,
       this.onToggleClient,
       this.onTurnOnAll,
-      this.onTurnOffAll) : super(equals: [...clientSetupItems]);
+      this.onTurnOffAll) : super(equals: [...clientSetupItems, clientSetupItems.map((element) => element.monitored)]);
 }
 
 class PreferencesScreen extends StatelessWidget {
