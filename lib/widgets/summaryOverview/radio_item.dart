@@ -1,11 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:stats_app/screens/collaborator_overview_screen.dart';
 
 class RadioItem extends StatelessWidget {
   final void Function(dynamic)  onChangedHandler;
-  final String value;
+  final Period value;
+  final Period period;
 
-  const RadioItem({Key? key, required this.onChangedHandler, required this.value}) : super(key: key);
+  final String text;
+
+  const RadioItem({Key? key, required this.onChangedHandler, required this.value, required this.period, required this.text}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -15,12 +19,12 @@ class RadioItem extends StatelessWidget {
             data: ThemeData(unselectedWidgetColor: Colors.white),
             child: Radio(
               value: value,
-              groupValue: 'null',
+              groupValue: period,
               onChanged: onChangedHandler,
               activeColor: Colors.white,
             )),
         Text(
-          value,
+          text,
           style: const TextStyle(color: Colors.white, fontSize: 12),
         )
       ],

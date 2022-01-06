@@ -281,7 +281,9 @@ class _CollaboratorOverviewScreenState
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         RadioItem(
-          value: 'Week',
+          period: selectedPeriod,
+          value: Period.week,
+          text: 'Week',
           onChangedHandler: (_) {
             setState(() {
               selectedPeriod = Period.week;
@@ -289,7 +291,9 @@ class _CollaboratorOverviewScreenState
           },
         ),
         RadioItem(
-          value: 'Month',
+          period: selectedPeriod,
+          value: Period.month,
+          text: 'Month',
           onChangedHandler: (_) {
             setState(() {
               selectedPeriod = Period.month;
@@ -297,7 +301,9 @@ class _CollaboratorOverviewScreenState
           },
         ),
         RadioItem(
-          value: 'All',
+          period: selectedPeriod,
+          value: Period.all,
+          text: 'All',
           onChangedHandler: (_) {
             setState(() {
               selectedPeriod = Period.all;
