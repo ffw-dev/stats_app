@@ -56,14 +56,19 @@ class _MyAppState extends State<MyApp> {
           theme:
               ThemeData(primarySwatch: Colors.red, backgroundColor: Colors.red),
           onGenerateRoute: (RouteSettings settings) {
+            if(settings.name == null || settings.name != 'clientSummary') {
+              return MaterialPageRoute(builder: (_) => const OverviewScreenConnector());
+            }
+            
             var routes = <String, WidgetBuilder>{
               "clientSummary": (ctx) =>
                   CollaboratorOverviewScreen(settings.arguments),
             };
-
+            
             WidgetBuilder builder = routes[settings.name]!;
             return MaterialPageRoute(builder: (ctx) => builder(ctx));
           },
+          onUnknownRoute: (_) => MaterialPageRoute(builder: (_) => const OverviewScreenConnector()),
           routes: {
             '/': (_) => waitForLoginFutureAndBuildAppropriateWidget(),
             '/selectCollaborators': (_) => const SelectCollaborator(),

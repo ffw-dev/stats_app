@@ -45,7 +45,7 @@ class CustomTable extends StatelessWidget {
 
     var exportedTotal = 0;
     for (var item in filteredBillingTimedSummaryItems) {
-      exportedTotal += item.digitizationCount;
+      exportedTotal += item.exportCount;
     }
 
     return TableRow(
@@ -80,8 +80,8 @@ class CustomTable extends StatelessWidget {
               "${DateTime.fromMillisecondsSinceEpoch(e.date).day.toString()}"),
       buildTableCell(e.finalizeDuration.toString().substring(0, 10)),
       buildTableCell(e.finalizeCount.toString()),
-      buildTableCell(e.digitizeDuration.toString().substring(0, 10)),
-      buildTableCell(e.digitizationCount.toString()),
+      buildTableCell(e.exportDuration.toString().substring(0, 10)),
+      buildTableCell(e.exportCount.toString()),
     ]))
         .toList();
   }

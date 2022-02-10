@@ -1,6 +1,7 @@
 import 'package:dev_basic_api/main.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:stats_app/screens/select_collaborators_screen.dart';
 import 'package:stats_app/widgets/app_main_bar.dart';
 import 'package:stats_app/widgets/summaryOverview/custom_table.dart';
 import 'package:stats_app/widgets/summaryOverview/radio_item.dart';
@@ -144,7 +145,7 @@ class _CollaboratorOverviewScreenState
                           child: TextButton(
                             onPressed: () {
                               Navigator.of(context)
-                                  .pushNamed('/selectCollaborators');
+                                  .pushReplacement(MaterialPageRoute(builder: (_) => const SelectCollaborator()));
                             },
                             child: const Text(
                               'Select collaborator',

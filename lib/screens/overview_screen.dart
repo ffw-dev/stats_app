@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:stats_app/data/client_setup_item.dart';
 import 'package:stats_app/redux/app_state.dart';
+import 'package:stats_app/screens/select_collaborators_screen.dart';
 import 'package:stats_app/widgets/app_main_bar.dart';
 import 'package:stats_app/widgets/summaryOverview/custom_table.dart';
 import 'package:stats_app/widgets/summaryOverview/reel_part_headers_row.dart';
@@ -112,15 +113,15 @@ class _OverviewScreenState extends State<OverviewScreen> {
       var item = billingTimedSummaryItems[iterationCounter];
       int y = iterationCounter;
 
-      var tempDigCountTotal = 0;
-      String tempDigDuration = '';
+      var tempExpCount = 0;
+      String tempExpDuration = '';
       var tempFinCountTotal = 0;
       String tempFinDuration = '';
 
       while (y < billingTimedSummaryItems.length &&
           item.date == billingTimedSummaryItems[y].date) {
-        tempDigCountTotal += billingTimedSummaryItems[y].digitizationCount;
-        tempDigDuration += billingTimedSummaryItems[y].digitizeDuration;
+        tempExpCount += billingTimedSummaryItems[y].exportCount;
+        tempExpDuration += billingTimedSummaryItems[y].exportDuration;
         tempFinCountTotal += billingTimedSummaryItems[y].finalizeCount;
         tempFinDuration += billingTimedSummaryItems[y].finalizeDuration;
         iterationCounter++;
@@ -131,14 +132,14 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
       mergedBillingSummaryItem.add(BillingTimedSummaryItem(
           date: item.date,
-          digitizationCount: tempDigCountTotal,
+          digitizationCount: item.digitizationCount,
           intermediateCount: item.intermediateCount,
           finalizeCount: tempFinCountTotal,
-          exportCount: item.exportCount,
-          digitizeDuration: tempDigDuration,
+          exportCount: tempExpCount,
+          digitizeDuration: item.digitizeDuration,
           intermediateDuration: '',
           finalizeDuration: tempFinDuration,
-          exportDuration: '',
+          exportDuration: tempExpDuration,
           fullName: item.fullName));
     }
     setState(() {
@@ -215,7 +216,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                           child: TextButton(
                             onPressed: () {
                               Navigator.of(context)
-                                  .popAndPushNamed('/selectCollaborators');
+                                  .pushReplacement(MaterialPageRoute(builder: (_) => const SelectCollaborator()));
                             },
                             child: const Text(
                               'Select collaborator',
